@@ -1,0 +1,98 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
+
+// Layouts
+import MainLayout from './layouts/MainLayout'
+
+// Pages
+import Home from './pages/Home'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetConfirmation from './pages/ResetConfirmation'
+import MapView from './pages/MapView'
+import DistributorDetail from './pages/DistributorDetail'
+import OwnerDistributors from './pages/OwnerDistributors'
+import Favorites from './pages/Favorites'
+import Settings from './pages/Settings'
+import ReportProblem from './pages/ReportProblem'
+import AppVersion from './pages/AppVersion'
+import AddDistributor from './pages/AddDistributor'
+import Admin from './pages/Admin'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminUsers from './pages/AdminUsers'
+import Account from './pages/Account'
+import FAQ from './pages/FAQ'
+import CompanyPage from './pages/CompanyPage'
+
+function App() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Vérifier la session utilisateur au démarrage
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    // Écouter les changements d'authentification
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-accent-gray">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <Router>
+      <Routes>
+        {/* Routes publiques (sans layout) */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-confirmation" element={<ResetConfirmation />} />
+
+        {/* Routes avec layout (bottom navigation) */}
+        <Route element={<MainLayout user={user} />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/map" element={<MapView />} />
+          <Route path="/add-distributor" element={<AddDistributor />} />
+          <Route path="/distributor/:id" element={<DistributorDetail />} />
+          <Route path="/owner-distributors" element={<OwnerDistributors />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/reports" element={<Admin />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/favorites" element={<Favorites user={user} />} />
+          <Route path="/settings" element={<Settings user={user} />} />
+          <Route path="/report-problem/:id" element={<ReportProblem />} />
+          <Route path="/app-version" element={<AppVersion />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/company/:id" element={<CompanyPage />} />
+        </Route>
+        <Route element={<MainLayout user={user} />}>
+  {/* ... autres routes */}
+  <Route path="/admin" element={<Admin />} />
+</Route>
+      </Routes>
+    </Router>
+  )
+}
+
+export default App
