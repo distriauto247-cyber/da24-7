@@ -51,8 +51,12 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-accent-gray">Chargement...</p>
+          <img
+            src="/logo.png"
+            alt="DA24/7"
+            className="w-64 h-auto mx-auto mb-8 animate-pulse"
+          />
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
         </div>
       </div>
     )
