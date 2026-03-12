@@ -33,7 +33,7 @@ function App() {
   useEffect(() => {
     // Vérifier la session utilisateur au démarrage
     // Délai minimum de 1.5s pour le splash screen
-    const minDelay = new Promise(resolve => setTimeout(resolve, 1500))
+    const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
     const sessionCheck = supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
     })
