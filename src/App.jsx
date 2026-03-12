@@ -32,10 +32,12 @@ function App() {
 
   useEffect(() => {
     // Vérifier la session utilisateur au démarrage
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Délai minimum de 1.5s pour le splash screen
+    const minDelay = new Promise(resolve => setTimeout(resolve, 1500))
+    const sessionCheck = supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      setLoading(false)
     })
+    Promise.all([minDelay, sessionCheck]).then(() => setLoading(false))
 
     // Écouter les changements d'authentification
     const {
@@ -49,15 +51,21 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary">
-        <div className="text-center">
-          <img
-            src="/logo.png"
-            alt="DA24/7"
-            className="w-64 h-auto mx-auto mb-8 animate-pulse"
-          />
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: '#F5F0EB',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+      }}>
+        <img
+          src="/logo.png"
+          alt="DA24/7"
+          style={{ width: '72vw', maxWidth: '320px', height: 'auto' }}
+        />
       </div>
     )
   }
