@@ -114,15 +114,17 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-secondary px-4 pt-8 pb-24">
+    <div className="min-h-screen bg-secondary px-4 pt-3 pb-24">
       {/* Logo */}
-      <Logo size="lg" />
+      <div className="flex justify-center mb-1">
+        <Logo size="sm" />
+      </div>
 
       {/* Titre */}
-      <h1 className="text-3xl font-bold text-center mb-8">DISTRIBUTEURS</h1>
+      <h1 className="text-xl font-bold text-center mb-4">DISTRIBUTEURS</h1>
 
       {/* Recherche par localisation */}
-      <div className="space-y-3 mb-8">
+      <div className="space-y-2 mb-4">
         {/* Autour de moi */}
         <button 
           className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 flex items-center justify-between text-left"
@@ -171,37 +173,37 @@ export default function Home() {
       </div>
 
       {/* Catégories */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-4">Catégories</h2>
-        <div className="flex flex-wrap justify-center gap-4">
+      <div className="mb-4">
+        <h2 className="text-base font-bold mb-2">Catégories</h2>
+        <div className="flex flex-wrap justify-center gap-2">
           {categories.slice(0, 4).map((category) => (
             <button
               key={category.value}
-              className="flex flex-col items-center w-20"
+              className="flex flex-col items-center w-16"
               onClick={() => navigate(`/map?category=${category.value}`)}
             >
               <img 
                 src={category.icon} 
                 alt={category.label}
-                className="w-16 h-16 mb-2 object-contain"
+                className="w-12 h-12 mb-1 object-contain"
               />
-              <span className="text-sm text-center text-black font-bold">{category.label}</span>
+              <span className="text-xs text-center text-black font-bold">{category.label}</span>
             </button>
           ))}
           <div className="w-full"></div>
-          <div className="flex justify-center gap-4 w-full">
+          <div className="flex justify-center gap-2 w-full">
             {categories.slice(4).map((category) => (
               <button
                 key={category.value}
-                className="flex flex-col items-center w-20"
+                className="flex flex-col items-center w-16"
                 onClick={() => navigate(`/map?category=${category.value}`)}
               >
                 <img 
                   src={category.icon} 
                   alt={category.label}
-                  className="w-16 h-16 mb-2 object-contain"
+                  className="w-12 h-12 mb-1 object-contain"
                 />
-                <span className="text-sm text-center text-black font-bold">{category.label}</span>
+                <span className="text-xs text-center text-black font-bold">{category.label}</span>
               </button>
             ))}
           </div>
@@ -209,7 +211,7 @@ export default function Home() {
       </div>
 
       {/* Bouton ajouter une machine */}
-      <Button onClick={() => navigate('/add-distributor')} className="mb-6 text-xl text-white">
+      <Button onClick={() => navigate('/add-distributor')} className="mb-3 text-base text-white">
         AJOUTER UNE MACHINE
       </Button>
 
