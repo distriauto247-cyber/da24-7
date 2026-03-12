@@ -117,14 +117,14 @@ export default function Home() {
     <div className="min-h-screen bg-secondary px-4 pt-3 pb-24">
       {/* Logo */}
       <div className="flex justify-center mb-1">
-        <Logo size="sm" />
+        <Logo size="md" />
       </div>
 
       {/* Titre */}
-      <h1 className="text-xl font-bold text-center mb-4">DISTRIBUTEURS</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">DISTRIBUTEURS</h1>
 
       {/* Recherche par localisation */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-3 mb-6">
         {/* Autour de moi */}
         <button 
           className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 flex items-center justify-between text-left"
@@ -173,7 +173,7 @@ export default function Home() {
       </div>
 
       {/* Catégories */}
-      <div className="mb-4">
+      <div className="mb-6">
         <h2 className="text-base font-bold mb-2">Catégories</h2>
         <div className="flex flex-wrap justify-center gap-2">
           {categories.slice(0, 4).map((category) => (
@@ -211,7 +211,7 @@ export default function Home() {
       </div>
 
       {/* Bouton ajouter une machine */}
-      <Button onClick={() => navigate('/add-distributor')} className="mb-3 text-base text-white">
+      <Button onClick={() => navigate('/add-distributor')} className="mb-6 text-lg text-white py-4">
         AJOUTER UNE MACHINE
       </Button>
 
