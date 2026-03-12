@@ -62,10 +62,30 @@ function App() {
         zIndex: 9999,
       }}>
         <img
-          src="/logo.png"
+          src="/logo-transparent.png"
           alt="DA24/7"
-          style={{ width: '72vw', maxWidth: '320px', height: 'auto' }}
+          style={{ width: '72vw', maxWidth: '320px', height: 'auto', marginBottom: '24px' }}
         />
+        <p style={{
+          fontSize: '18px',
+          fontWeight: '600',
+          color: '#E53935',
+          textAlign: 'center',
+          letterSpacing: '0.5px',
+          margin: 0,
+        }}>
+          Distributeurs automatiques
+        </p>
+        <p style={{
+          fontSize: '18px',
+          fontWeight: '600',
+          color: '#E53935',
+          textAlign: 'center',
+          letterSpacing: '0.5px',
+          margin: '4px 0 0 0',
+        }}>
+          24/24 &nbsp;7/7
+        </p>
       </div>
     )
   }
