@@ -7,13 +7,20 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'logo.png'],
+      // Force le SW à se mettre à jour immédiatement sans attendre la fermeture de l'onglet
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        // Ne pas mettre en cache les fichiers JS/CSS (ils ont déjà un hash Vite)
+        runtimeCaching: [],
+      },
+      includeAssets: ['favicon.ico', 'logo.png', 'logo-transparent.png'],
       manifest: {
         name: 'DA24/7 - Distributeurs Automatiques',
         short_name: 'DA24/7',
         description: 'Trouvez tous les distributeurs automatiques près de vous',
-        theme_color: '#D03E3E',
-        background_color: '#F5EFE7',
+        theme_color: '#E53935',
+        background_color: '#F5F0EB',
         display: 'standalone',
         icons: [
           {
@@ -32,5 +39,15 @@ export default defineConfig({
   ],
   server: {
     port: 3000
+  },
+  build: {
+    // Hash unique dans le nom de chaque fichier JS/CSS à chaque build
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+      }
+    }
   }
 })
