@@ -158,6 +158,8 @@ export default function MapView() {
   
   // Bottom sheet
   const [selectedDistributor, setSelectedDistributor] = useState(null)
+  const [showCategoryCorrection, setShowCategoryCorrection] = useState(false)
+  const [categoryCorrectSuccess, setCategoryCorrectSuccess] = useState(false)
   const [bottomSheetExpanded, setBottomSheetExpanded] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
   const [displayDistance, setDisplayDistance] = useState(null)
@@ -266,7 +268,7 @@ export default function MapView() {
       }
 
       // ── 2. Charger depuis la table "distributeurs" (données OSM) ──
-      const queryOSM = supabase
+      let queryOSM = supabase
         .from('distributeurs')
         .select('osm_id, latitude, longitude, nom, type_produit, operateur, adresse, ville, ouverture, paiement_cb, paiement_especes')
         .not('latitude', 'is', null)
@@ -282,8 +284,8 @@ export default function MapView() {
       if (resManuel.error) console.warn('Erreur table distributors:', resManuel.error.message)
       if (resOSM.error) console.warn('Erreur table distributeurs OSM:', resOSM.error.message)
 
-      // Normaliser les données OSM pour correspondre au format attendu par l'UI
-      const osmNormalized = (resOSM.data || []).map(d => ({
+      // Normaliser les données OSM et filtrer par catégorie si nécessaire
+      const osmRaw = (resOSM.data || []).map(d => ({
         id: `osm-${d.osm_id}`,
         name: d.nom || 'Distributeur automatique',
         address: [d.adresse, d.ville].filter(Boolean).join(', ') || 'Adresse inconnue',
@@ -298,6 +300,11 @@ export default function MapView() {
         ].filter(Boolean).join(' · '),
         source: 'osm',
       }))
+
+      // Filtrer les données OSM par catégorie si un filtre est actif
+      const osmNormalized = category
+        ? osmRaw.filter(d => d.category === category)
+        : osmRaw
 
       // Fusionner les deux sources et trier par distance
       const allDistributors = [
@@ -323,13 +330,23 @@ export default function MapView() {
   const mapOSMTypeToCategory = (typeOSM) => {
     if (!typeOSM) return 'autres'
     const t = typeOSM.toLowerCase()
-    if (t.includes('bread') || t.includes('baguette') || t.includes('pain')) return 'pain'
+    // Pain / boulangerie
+    if (t.includes('bread') || t.includes('baguette') || t.includes('pain') || t.includes('bakery') || t.includes('pastry')) return 'pain'
+    // Pizza
     if (t.includes('pizza')) return 'pizza'
-    if (t.includes('burger') || t.includes('sandwich')) return 'burger'
-    if (t.includes('food') || t.includes('snack') || t.includes('meal')) return 'alimentaire'
-    if (t.includes('flower') || t.includes('fleur')) return 'fleurs'
-    if (t.includes('medicine') || t.includes('condom') || t.includes('pharma')) return 'parapharmacie'
-    if (t.includes('drink') || t.includes('coffee') || t.includes('water')) return 'alimentaire'
+    // Burger / sandwich
+    if (t.includes('burger') || t.includes('sandwich') || t.includes('hot_dog') || t.includes('kebab')) return 'burger'
+    // Alimentaire (nourriture, boissons)
+    if (t.includes('food') || t.includes('snack') || t.includes('meal') || t.includes('sweets') || t.includes('candy') || t.includes('chips')) return 'alimentaire'
+    if (t.includes('drink') || t.includes('beverage') || t.includes('coffee') || t.includes('water') || t.includes('juice') || t.includes('soda') || t.includes('milk')) return 'alimentaire'
+    if (t.includes('ice_cream') || t.includes('frozen') || t.includes('yogurt')) return 'alimentaire'
+    if (t.includes('egg') || t.includes('meat') || t.includes('cheese') || t.includes('fruit') || t.includes('vegetable')) return 'alimentaire'
+    // Fleurs
+    if (t.includes('flower') || t.includes('fleur') || t.includes('plant')) return 'fleurs'
+    // Parapharmacie / hygiène
+    if (t.includes('medicine') || t.includes('condom') || t.includes('pharma') || t.includes('hygiene') || t.includes('sanitary') || t.includes('mask') || t.includes('test')) return 'parapharmacie'
+    if (t.includes('cosmetic') || t.includes('beauty') || t.includes('sunscreen') || t.includes('bandage')) return 'parapharmacie'
+    // Tout le reste
     return 'autres'
   }
 
@@ -414,6 +431,38 @@ export default function MapView() {
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     searchAddress(searchQuery)
+  }
+
+  // Correction de catégorie par l'utilisateur
+  const handleCorrectCategory = async (distributor, newCategory) => {
+    try {
+      // Sauvegarder dans distributor_reports avec type 'category_correction'
+      const { error } = await supabase
+        .from('distributor_reports')
+        .insert({
+          name: distributor.name || 'Distributeur automatique',
+          address: distributor.address || '',
+          latitude: distributor.latitude,
+          longitude: distributor.longitude,
+          category: newCategory,
+          description: `Correction de catégorie (source: ${distributor.source || 'osm'}, id: ${distributor.id})`,
+          status: 'pending',
+          report_type: 'category_correction',
+        })
+
+      if (error) throw error
+
+      // Mettre à jour localement l'affichage
+      setSelectedDistributor(prev => ({ ...prev, category: newCategory }))
+      setDistributors(prev => prev.map(d =>
+        d.id === distributor.id ? { ...d, category: newCategory } : d
+      ))
+      setCategoryCorrectSuccess(true)
+      setShowCategoryCorrection(false)
+      setTimeout(() => setCategoryCorrectSuccess(false), 3000)
+    } catch (err) {
+      console.error('Erreur correction catégorie:', err)
+    }
   }
 
   // ============================================
@@ -941,6 +990,57 @@ export default function MapView() {
             {bottomSheetExpanded && selectedDistributor.description && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600">{selectedDistributor.description}</p>
+              </div>
+            )}
+
+            {/* Correction de catégorie (si expandé) */}
+            {bottomSheetExpanded && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                {!showCategoryCorrection ? (
+                  <button
+                    onClick={() => setShowCategoryCorrection(true)}
+                    className="text-xs text-gray-400 underline w-full text-center"
+                  >
+                    ✏️ Catégorie incorrecte ? Suggérer une correction
+                  </button>
+                ) : (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Sélectionne la bonne catégorie :</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'pain', label: 'Pain', icon: iconPain },
+                        { value: 'pizza', label: 'Pizza', icon: iconPizza },
+                        { value: 'burger', label: 'Burger', icon: iconBurger },
+                        { value: 'alimentaire', label: 'Alimentaire', icon: iconAlimentaire },
+                        { value: 'fleurs', label: 'Fleurs', icon: iconFleurs },
+                        { value: 'parapharmacie', label: 'Pharma', icon: iconParapharmacie },
+                        { value: 'autres', label: 'Autres', icon: iconAutres },
+                      ].map(cat => (
+                        <button
+                          key={cat.value}
+                          onClick={() => handleCorrectCategory(selectedDistributor, cat.value)}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border-2 transition ${
+                            selectedDistributor.category === cat.value
+                              ? 'border-primary bg-primary text-white'
+                              : 'border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          <img src={cat.icon} alt={cat.label} className="w-4 h-4 object-contain" />
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setShowCategoryCorrection(false)}
+                      className="text-xs text-gray-400 mt-2 w-full text-center"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                )}
+                {categoryCorrectSuccess && (
+                  <p className="text-xs text-green-600 text-center mt-1">✅ Merci pour votre correction !</p>
+                )}
               </div>
             )}
           </div>
