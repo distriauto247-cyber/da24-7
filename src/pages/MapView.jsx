@@ -135,6 +135,7 @@ function UserLocationMarker({ position }) {
 
 export default function MapView() {
   const navigate = useNavigate()
+  const [installerInfo, setInstallerInfo] = useState(null)
   const [searchParams] = useSearchParams()
   
   // États
@@ -635,6 +636,17 @@ export default function MapView() {
     setSelectedDistributor(distributor)
     setBottomSheetExpanded(true)
     checkIfFavorite(distributor.id)
+    setInstallerInfo(null)
+
+    // Charger l'installateur si la machine en a un
+    if (distributor.installer_id) {
+      supabase
+        .from('installers')
+        .select('id, company_name, logo_url, slogan, phone')
+        .eq('id', distributor.installer_id)
+        .single()
+        .then(({ data }) => { if (data) setInstallerInfo(data) })
+    }
 
     const addressManquante =
       !distributor.address ||
@@ -993,7 +1005,30 @@ export default function MapView() {
               </div>
             )}
 
-            {/* Correction de catégorie (si expandé) */}
+            {/* Encart installateur */}
+            {installerInfo && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-400 mb-2 font-medium">INSTALLÉ PAR</p>
+                <button
+                  onClick={() => navigate(`/installer/${installerInfo.id}`)}
+                  className="w-full flex items-center gap-3 bg-gray-50 rounded-xl p-3"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {installerInfo.logo_url
+                      ? <img src={installerInfo.logo_url} alt={installerInfo.company_name} className="w-full h-full object-contain p-1" />
+                      : <span className="text-lg font-bold text-primary">{installerInfo.company_name[0]}</span>
+                    }
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-bold text-black">{installerInfo.company_name}</p>
+                    {installerInfo.slogan && <p className="text-xs text-gray-500">{installerInfo.slogan}</p>}
+                  </div>
+                  <span className="text-xs text-primary font-medium">Voir →</span>
+                </button>
+              </div>
+            )}
+
+            {/* Correction de catégorie (si expandé) */}}
             {bottomSheetExpanded && (
               <div className="mt-3 pt-3 border-t border-gray-100">
                 {!showCategoryCorrection ? (
