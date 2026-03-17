@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, MapPin, AlertCircle, ChevronRight, RefreshCw } from 'lucide-react'
+import { Users, MapPin, AlertCircle, ChevronRight, RefreshCw, Building2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAdmin } from '../hooks/useAdmin'
 
@@ -230,6 +230,24 @@ export default function AdminDashboard() {
               <div className="text-sm text-gray-600">
                 {stats.totalUsers} utilisateur{stats.totalUsers > 1 ? 's' : ''} inscrit{stats.totalUsers > 1 ? 's' : ''}
               </div>
+            </div>
+          </div>
+          <ChevronRight size={24} className="text-gray-400" />
+        </button>
+      </div>
+
+        {/* Gérer les installateurs */}
+        <button
+          onClick={() => navigate('/admin/installers')}
+          className="w-full bg-white rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 p-3 rounded-full">
+              <Building2 size={24} className="text-purple-600" />
+            </div>
+            <div className="text-left">
+              <div className="font-bold">Gérer les installateurs</div>
+              <div className="text-sm text-gray-600">Partenaires et abonnements</div>
             </div>
           </div>
           <ChevronRight size={24} className="text-gray-400" />
