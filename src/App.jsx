@@ -25,6 +25,8 @@ import AdminUsers from './pages/AdminUsers'
 import Account from './pages/Account'
 import FAQ from './pages/FAQ'
 import CompanyPage from './pages/CompanyPage'
+import InstallersList from './pages/InstallersList'
+import InstallerProfile from './pages/InstallerProfile'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -117,6 +119,8 @@ function App() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/account" element={<Account />} />
           <Route path="/company/:id" element={<CompanyPage />} />
+          <Route path="/installers" element={<InstallersList />} />
+          <Route path="/installer/:id" element={<InstallerProfile />} />
         </Route>
         <Route element={<MainLayout user={user} />}>
   {/* ... autres routes */}

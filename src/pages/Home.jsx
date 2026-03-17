@@ -211,6 +211,27 @@ export default function Home() {
       </div>
 
       {/* Bouton ajouter une machine */}
+      {/* Section installateurs partenaires */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-base font-bold">Installateurs partenaires</h2>
+          <button onClick={() => navigate('/installers')} className="text-xs text-primary font-medium">Voir tous →</button>
+        </div>
+        <button
+          onClick={() => navigate('/installers')}
+          className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border border-gray-100"
+        >
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-2xl">🏭</span>
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-bold text-black text-sm">Trouvez un installateur</p>
+            <p className="text-xs text-gray-500 mt-0.5">Professionnels de la distribution automatique</p>
+          </div>
+          <span className="text-gray-300 text-lg">›</span>
+        </button>
+      </div>
+
       <Button onClick={() => navigate('/add-distributor')} className="mb-6 text-lg text-white py-4">
         AJOUTER UNE MACHINE
       </Button>
