@@ -234,7 +234,6 @@ export default function AdminDashboard() {
           </div>
           <ChevronRight size={24} className="text-gray-400" />
         </button>
-      </div>
 
         {/* Gérer les installateurs */}
         <button

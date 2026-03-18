@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight, MapPin, Bell, Info, Shield, FileText, User as UserIcon, X, SettingsIcon as SettingsIcon } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import iconPain from '../assets/icons/pain.png'
+import iconPizza from '../assets/icons/pizza.png'
+import iconBurger from '../assets/icons/burger.png'
+import iconAlimentaire from '../assets/icons/alimentaire.png'
+import iconFleurs from '../assets/icons/fleurs.png'
+import iconParapharmacie from '../assets/icons/parapharmacie.png'
+import iconAutres from '../assets/icons/autres.png'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 
 export default function Settings({ user }) {
@@ -26,6 +33,9 @@ export default function Settings({ user }) {
   const [favoriteCategories, setFavoriteCategories] = useState([])
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
   
+  // Filtre catégories sur la carte
+  const [mapCategoryFilter, setMapCategoryFilter] = useState([])
+
   // Vérification admin
   const [isAdmin, setIsAdmin] = useState(false)
   
@@ -57,6 +67,8 @@ export default function Settings({ user }) {
     if (savedCityCoords) setDefaultCityCoords(JSON.parse(savedCityCoords))
     if (savedWatchedCities) setWatchedCities(JSON.parse(savedWatchedCities))
     if (savedFavoriteCategories) setFavoriteCategories(JSON.parse(savedFavoriteCategories))
+    const savedMapFilter = localStorage.getItem('mapCategoryFilter')
+    if (savedMapFilter) setMapCategoryFilter(JSON.parse(savedMapFilter))
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
     
     // Vérifier si l'utilisateur est admin
@@ -233,6 +245,22 @@ export default function Settings({ user }) {
     }
     setFavoriteCategories(newCategories)
     localStorage.setItem('favoriteCategories', JSON.stringify(newCategories))
+  }
+
+  const handleToggleMapCategory = (categoryValue) => {
+    let newFilter
+    if (mapCategoryFilter.includes(categoryValue)) {
+      newFilter = mapCategoryFilter.filter(c => c !== categoryValue)
+    } else {
+      newFilter = [...mapCategoryFilter, categoryValue]
+    }
+    setMapCategoryFilter(newFilter)
+    localStorage.setItem('mapCategoryFilter', JSON.stringify(newFilter))
+  }
+
+  const handleClearMapFilter = () => {
+    setMapCategoryFilter([])
+    localStorage.removeItem('mapCategoryFilter')
   }
 
   const handleToggleNotification = (key) => {
@@ -460,6 +488,56 @@ export default function Settings({ user }) {
           </div>
         </div>
       )}
+
+      {/* Filtre carte Section */}
+      <div className="bg-white mb-4 p-4">
+        <h2 className="text-primary font-bold text-lg mb-2 flex items-center gap-2">
+          🗺️ Filtre de la carte
+        </h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Sélectionnez les catégories à afficher sur la carte. Si aucune n'est cochée, toutes s'affichent.
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { value: 'pain', label: 'Pain', icon: iconPain },
+            { value: 'pizza', label: 'Pizza', icon: iconPizza },
+            { value: 'burger', label: 'Burger', icon: iconBurger },
+            { value: 'alimentaire', label: 'Alimentaire', icon: iconAlimentaire },
+            { value: 'fleurs', label: 'Fleurs', icon: iconFleurs },
+            { value: 'parapharmacie', label: 'Pharma', icon: iconParapharmacie },
+            { value: 'autres', label: 'Autres', icon: iconAutres },
+          ].map(cat => (
+            <button
+              key={cat.value}
+              onClick={() => handleToggleMapCategory(cat.value)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition ${
+                mapCategoryFilter.includes(cat.value)
+                  ? 'border-primary bg-primary/10'
+                  : 'border-gray-200 bg-white'
+              }`}
+            >
+              <img src={cat.icon} alt={cat.label} className="w-6 h-6 object-contain" />
+              <span className={`text-sm font-medium ${mapCategoryFilter.includes(cat.value) ? 'text-primary' : 'text-gray-700'}`}>
+                {cat.label}
+              </span>
+              {mapCategoryFilter.includes(cat.value) && (
+                <span className="ml-auto text-primary text-xs">✓</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {mapCategoryFilter.length > 0 && (
+          <button onClick={handleClearMapFilter} className="mt-3 text-xs text-gray-400 underline w-full text-center">
+            Tout afficher (réinitialiser)
+          </button>
+        )}
+
+        {mapCategoryFilter.length === 0 && (
+          <p className="mt-3 text-xs text-green-600 text-center">✅ Toutes les catégories affichées</p>
+        )}
+      </div>
 
       {/* Notifications Section */}
       <div className="bg-white mb-4 p-4">

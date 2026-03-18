@@ -150,7 +150,16 @@ export default function MapView() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || null)
+  // Appliquer le filtre carte sauvegardé si pas de catégorie dans l'URL
+  const savedMapFilter = localStorage.getItem('mapCategoryFilter')
+  const parsedMapFilter = savedMapFilter ? JSON.parse(savedMapFilter) : []
+  const urlCategory = searchParams.get('category')
+  const [selectedCategory, setSelectedCategory] = useState(
+    urlCategory || (parsedMapFilter.length === 1 ? parsedMapFilter[0] : null)
+  )
+  const [activeMapFilters, setActiveMapFilters] = useState(
+    urlCategory ? [] : parsedMapFilter
+  )
   const [radius, setRadius] = useState(() => {
     const savedDistance = localStorage.getItem('searchDistance')
     return savedDistance ? parseInt(savedDistance) : 10
@@ -587,12 +596,10 @@ export default function MapView() {
 
   const handleMapMove = (newCenter, bounds) => {
     if (!bounds) return
-    // Calculer le rayon depuis les bounds de la carte visible
     const ne = bounds.getNorthEast()
     const sw = bounds.getSouthWest()
     const latDiff = Math.abs(ne.lat - sw.lat)
     const lngDiff = Math.abs(ne.lng - sw.lng)
-    // Rayon = moitié de la diagonale visible en km (max 200 km)
     const radiusKm = Math.min(200, Math.max(2,
       Math.sqrt(Math.pow(latDiff * 111, 2) + Math.pow(lngDiff * 111 * Math.cos(newCenter[0] * Math.PI / 180), 2)) / 2
     ))
@@ -905,8 +912,8 @@ export default function MapView() {
         <MapController position={mapCenter} onMapMove={handleMapMove} />
         <UserLocationMarker position={userPosition} />
 
-        {/* Marqueurs des distributeurs */}
-        {distributors.map((distributor) => (
+        {/* Marqueurs des distributeurs - filtrés par catégories favorites */}
+        {distributors.filter(d => activeMapFilters.length === 0 || activeMapFilters.includes(d.category)).map((distributor) => (
           <Marker
             key={distributor.id}
             position={[distributor.latitude, distributor.longitude]}
