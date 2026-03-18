@@ -7,12 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Force le SW à se mettre à jour immédiatement sans attendre la fermeture de l'onglet
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        // Ne pas mettre en cache les fichiers JS/CSS (ils ont déjà un hash Vite)
+        // Ne jamais mettre en cache les fichiers JS/CSS/HTML
+        globPatterns: [],
         runtimeCaching: [],
+        navigateFallback: null,
       },
       includeAssets: ['favicon.ico', 'logo.png', 'logo-transparent.png'],
       manifest: {
@@ -41,7 +42,6 @@ export default defineConfig({
     port: 3000
   },
   build: {
-    // Hash unique dans le nom de chaque fichier JS/CSS à chaque build
     rollupOptions: {
       output: {
         entryFileNames: 'assets/[name]-[hash].js',
