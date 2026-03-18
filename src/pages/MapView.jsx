@@ -63,6 +63,56 @@ const createCategoryIcon = (category) => {
   })
 }
 
+// Icône PRO — plus grande, colorée, avec badge étoile
+const createProIcon = (category) => {
+  const config = categoryIcons[category] || categoryIcons.default
+  return L.divIcon({
+    html: `
+      <div style="position:relative;width:52px;height:52px;">
+        <div style="
+          background-color: ${config.color};
+          width: 52px;
+          height: 52px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 3px solid white;
+          box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+        ">
+          <img src="${config.icon}" style="
+            transform: rotate(45deg);
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+          " />
+        </div>
+        <div style="
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          background: gold;
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          border: 2px solid white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        ">⭐</div>
+      </div>
+    `,
+    className: 'custom-marker-pro',
+    iconSize: [52, 52],
+    iconAnchor: [26, 52],
+    popupAnchor: [0, -52],
+  })
+}
+
 // Icône pour la position utilisateur
 const userLocationIcon = L.divIcon({
   html: `
@@ -136,6 +186,7 @@ function UserLocationMarker({ position }) {
 export default function MapView() {
   const navigate = useNavigate()
   const [installerInfo, setInstallerInfo] = useState(null)
+  const [proOwners, setProOwners] = useState(new Set()) // IDs des machines Pro
   const [searchParams] = useSearchParams()
   
   // États
@@ -329,6 +380,21 @@ export default function MapView() {
 
       setDistributors(withDistance)
       setError(null)
+
+      // Charger les machines Pro (propriétaires avec abonnement actif)
+      const allIds = withDistance.map(d => String(d.id))
+      if (allIds.length > 0) {
+        supabase
+          .from('machine_ownership')
+          .select('distributor_id')
+          .eq('status', 'approved')
+          .eq('subscription_status', 'active')
+          .in('distributor_id', allIds.slice(0, 100))
+          .then(({ data }) => {
+  console.log('Pro trouvés:', data)
+  if (data) setProOwners(new Set(data.map(o => o.distributor_id)))
+})
+      }
     } catch (err) {
       console.error('Erreur fallback:', err)
       setError('Erreur de chargement')
@@ -624,7 +690,6 @@ export default function MapView() {
   }
 
   const handleMarkerClick = async (distributor) => {
-	  console.log('ID:', distributor.id)
     // Réinitialiser la distance affichée
     setDisplayDistance(null)
 
@@ -918,7 +983,7 @@ export default function MapView() {
           <Marker
             key={distributor.id}
             position={[distributor.latitude, distributor.longitude]}
-            icon={createCategoryIcon(distributor.category)}
+            icon={proOwners.has(String(distributor.id)) ? createProIcon(distributor.category) : createCategoryIcon(distributor.category)}
             eventHandlers={{
               click: () => handleMarkerClick(distributor),
             }}
@@ -954,6 +1019,9 @@ export default function MapView() {
                     className="w-8 h-8 object-contain"
                   />
                   <h3 className="font-bold text-lg">{selectedDistributor.name}</h3>
+                  {proOwners.has(String(selectedDistributor.id)) && (
+                    <span className="flex-shrink-0 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-bold">⭐ Pro</span>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600">{selectedDistributor.address}</p>
               </div>
