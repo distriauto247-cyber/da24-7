@@ -624,6 +624,7 @@ export default function MapView() {
   }
 
   const handleMarkerClick = async (distributor) => {
+	  console.log('ID:', distributor.id)
     // Réinitialiser la distance affichée
     setDisplayDistance(null)
 
