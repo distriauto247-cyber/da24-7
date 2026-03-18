@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Lock, LogOut, Trash2 } from 'lucide-react'
+import { User, Mail, Lock, LogOut, Trash2, BarChart2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Button from '../components/Button'
 
@@ -129,6 +129,19 @@ export default function Account() {
         <p className="text-sm text-gray-500 mt-2">
           Votre adresse email ne peut pas être modifiée
         </p>
+      </div>
+
+      {/* Espace propriétaire */}
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4">
+        <p className="text-sm font-bold text-primary mb-1">🤖 Vous avez des machines ?</p>
+        <p className="text-xs text-gray-600 mb-3">Revendiquez vos machines et accédez à leurs statistiques.</p>
+        <button
+          onClick={() => navigate('/owner/dashboard')}
+          className="w-full bg-primary text-white py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+        >
+          <BarChart2 size={16} />
+          Mon espace propriétaire
+        </button>
       </div>
 
       {/* Actions */}

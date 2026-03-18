@@ -1,450 +1,249 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Plus, Eye, Heart, MapPin, TrendingUp, AlertCircle, 
-  Edit, Trash2, MoreVertical, ChevronRight, BarChart3,
-  Users, Calendar, CheckCircle, Clock, XCircle
-} from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import Button from '../components/Button'
+import { ChevronLeft, Eye, Navigation, Heart, Share2, TrendingUp, Plus } from 'lucide-react'
 
-// Configuration des catégories
-const categoryConfig = {
-  pain: { emoji: '🥖', label: 'Pain', color: '#D4A574' },
-  pizza: { emoji: '🍕', label: 'Pizza', color: '#E74C3C' },
-  burger: { emoji: '🍔', label: 'Burger', color: '#F39C12' },
-  alimentaire: { emoji: '🛒', label: 'Alimentaire', color: '#27AE60' },
-  fleurs: { emoji: '💐', label: 'Fleurs', color: '#E91E63' },
-  parapharmacie: { emoji: '💊', label: 'Pharma', color: '#3498DB' },
-  autres: { emoji: '🏪', label: 'Autres', color: '#9B59B6' },
-}
-
-// Composant StatCard
-function StatCard({ icon: Icon, label, value, trend, color = 'primary' }) {
-  return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <div className={`w-10 h-10 rounded-lg bg-${color}/10 flex items-center justify-center`}>
-          <Icon size={20} className={`text-${color}`} />
-        </div>
-        {trend && (
-          <span className={`text-xs font-medium ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {trend > 0 ? '+' : ''}{trend}%
-          </span>
-        )}
-      </div>
-      <p className="text-2xl font-bold text-gray-800">{value}</p>
-      <p className="text-sm text-gray-500">{label}</p>
-    </div>
-  )
-}
-
-// Composant DistributorCard pour le dashboard
-function OwnerDistributorCard({ distributor, onEdit, onDelete, onViewStats }) {
-  const [showMenu, setShowMenu] = useState(false)
-  const category = categoryConfig[distributor.category] || categoryConfig.autres
-
-  const statusConfig = {
-    active: { label: 'Actif', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-    pending_verification: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-    inactive: { label: 'Inactif', color: 'bg-gray-100 text-gray-700', icon: XCircle },
-    reported: { label: 'Signalé', color: 'bg-red-100 text-red-700', icon: AlertCircle },
-  }
-
-  const status = statusConfig[distributor.status] || statusConfig.active
-  const StatusIcon = status.icon
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="flex">
-        {/* Image */}
-        <div 
-          className="w-24 h-24 flex-shrink-0 flex items-center justify-center"
-          style={{ backgroundColor: category.color + '20' }}
-        >
-          {distributor.photo_url ? (
-            <img src={distributor.photo_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-4xl">{category.emoji}</span>
-          )}
-        </div>
-
-        {/* Contenu */}
-        <div className="flex-1 p-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-bold text-gray-800 line-clamp-1">{distributor.name}</h3>
-              <p className="text-xs text-gray-500 line-clamp-1">{distributor.address}</p>
-            </div>
-            
-            {/* Menu actions */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowMenu(!showMenu)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <MoreVertical size={18} className="text-gray-400" />
-              </button>
-              
-              {showMenu && (
-                <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border py-1 z-10 min-w-[140px]">
-                  <button
-                    onClick={() => { setShowMenu(false); onEdit(distributor); }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <Edit size={14} /> Modifier
-                  </button>
-                  <button
-                    onClick={() => { setShowMenu(false); onViewStats(distributor); }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <BarChart3 size={14} /> Statistiques
-                  </button>
-                  <button
-                    onClick={() => { setShowMenu(false); onDelete(distributor); }}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                  >
-                    <Trash2 size={14} /> Supprimer
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Stats rapides */}
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <Eye size={12} />
-              <span>{distributor.view_count || 0} vues</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <Heart size={12} />
-              <span>{distributor.favorite_count || 0}</span>
-            </div>
-          </div>
-
-          {/* Statut */}
-          <div className="mt-2">
-            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${status.color}`}>
-              <StatusIcon size={10} />
-              {status.label}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Composant principal
 export default function OwnerDashboard() {
   const navigate = useNavigate()
-  
-  // États
   const [user, setUser] = useState(null)
+  const [machines, setMachines] = useState([])
+  const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
-  const [distributors, setDistributors] = useState([])
-  const [stats, setStats] = useState({
-    totalViews: 0,
-    totalFavorites: 0,
-    totalDistributors: 0,
-    pendingReports: 0,
-  })
-  const [period, setPeriod] = useState('month') // 'week', 'month', 'year'
-  
-  // ============================================
-  // CHARGEMENT DES DONNÉES
-  // ============================================
+  const [pendingClaims, setPendingClaims] = useState([])
 
   useEffect(() => {
-    checkAuth()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { navigate('/login'); return }
+      setUser(user)
+      loadData(user.id)
+    })
   }, [])
 
-  useEffect(() => {
-    if (user) {
-      loadOwnerData()
+  const loadData = async (userId) => {
+    // Charger les revendications approuvées
+    const { data: ownership } = await supabase
+      .from('machine_ownership')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    const approved = (ownership || []).filter(o => o.status === 'approved')
+    const pending = (ownership || []).filter(o => o.status !== 'approved')
+
+    setMachines(approved)
+    setPendingClaims(pending)
+
+    // Charger les stats pour les machines approuvées
+    if (approved.length > 0) {
+      const ids = approved.map(o => o.distributor_id)
+      const { data: statsData } = await supabase.rpc('get_machine_stats', { machine_ids: ids })
+      if (statsData) {
+        const statsMap = {}
+        statsData.forEach(s => { statsMap[s.distributor_id] = s })
+        setStats(statsMap)
+      }
     }
-  }, [user])
 
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      navigate('/login')
-      return
-    }
-    
-    setUser(user)
+    setLoading(false)
   }
 
-  const loadOwnerData = async () => {
-    setLoading(true)
-    
-    try {
-      // Charger les distributeurs du propriétaire
-      const { data: distributorData, error } = await supabase
-        .from('distributors')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false })
+  const totalViews = Object.values(stats).reduce((sum, s) => sum + Number(s.total_views || 0), 0)
+  const totalItineraries = Object.values(stats).reduce((sum, s) => sum + Number(s.total_itineraries || 0), 0)
+  const totalFavorites = Object.values(stats).reduce((sum, s) => sum + Number(s.total_favorites || 0), 0)
+  const totalShares = Object.values(stats).reduce((sum, s) => sum + Number(s.total_shares || 0), 0)
 
-      if (error) throw error
-
-      setDistributors(distributorData || [])
-
-      // Calculer les stats
-      const totalViews = (distributorData || []).reduce((sum, d) => sum + (d.view_count || 0), 0)
-      const totalFavorites = (distributorData || []).reduce((sum, d) => sum + (d.favorite_count || 0), 0)
-
-      // Compter les signalements en attente
-      const { count: pendingReports } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true })
-        .in('distributor_id', (distributorData || []).map(d => d.id))
-        .eq('status', 'pending')
-
-      setStats({
-        totalViews,
-        totalFavorites,
-        totalDistributors: distributorData?.length || 0,
-        pendingReports: pendingReports || 0,
-      })
-
-    } catch (err) {
-      console.error('Erreur chargement données:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ============================================
-  // ACTIONS
-  // ============================================
-
-  const handleAddDistributor = () => {
-    navigate('/add-distributor')
-  }
-
-  const handleEditDistributor = (distributor) => {
-    navigate(`/edit-distributor/${distributor.id}`)
-  }
-
-  const handleDeleteDistributor = async (distributor) => {
-    if (!confirm(`Supprimer "${distributor.name}" ?`)) return
-
-    try {
-      const { error } = await supabase
-        .from('distributors')
-        .delete()
-        .eq('id', distributor.id)
-        .eq('owner_id', user.id) // Sécurité
-
-      if (error) throw error
-
-      setDistributors(distributors.filter(d => d.id !== distributor.id))
-      alert('Distributeur supprimé')
-    } catch (err) {
-      console.error('Erreur suppression:', err)
-      alert('Erreur lors de la suppression')
-    }
-  }
-
-  const handleViewStats = (distributor) => {
-    navigate(`/distributor-stats/${distributor.id}`)
-  }
-
-  // ============================================
-  // RENDU
-  // ============================================
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-accent-gray">Chargement...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-secondary flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-secondary pb-24">
-      {/* ============================================ */}
-      {/* HEADER */}
-      {/* ============================================ */}
-      <div className="bg-primary text-white px-4 pt-6 pb-8">
-        <h1 className="text-2xl font-bold mb-1">Mon espace propriétaire</h1>
-        <p className="text-white/80 text-sm">Gérez vos distributeurs et suivez vos statistiques</p>
-      </div>
-
-      {/* ============================================ */}
-      {/* STATS CARDS */}
-      {/* ============================================ */}
-      <div className="px-4 -mt-4">
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard 
-            icon={MapPin} 
-            label="Mes machines" 
-            value={stats.totalDistributors}
-            color="primary"
-          />
-          <StatCard 
-            icon={Eye} 
-            label="Vues totales" 
-            value={stats.totalViews}
-            trend={12}
-            color="blue-500"
-          />
-          <StatCard 
-            icon={Heart} 
-            label="En favoris" 
-            value={stats.totalFavorites}
-            trend={8}
-            color="pink-500"
-          />
-          <StatCard 
-            icon={AlertCircle} 
-            label="Signalements" 
-            value={stats.pendingReports}
-            color="orange-500"
-          />
-        </div>
-      </div>
-
-      {/* ============================================ */}
-      {/* GRAPHIQUE (placeholder) */}
-      {/* ============================================ */}
-      <div className="px-4 mt-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-gray-800">Activité</h2>
-            <select 
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="text-sm border rounded-lg px-2 py-1"
-            >
-              <option value="week">7 jours</option>
-              <option value="month">30 jours</option>
-              <option value="year">12 mois</option>
-            </select>
+      {/* Header */}
+      <div className="bg-white px-4 pt-8 pb-4 shadow-sm">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 mb-3">
+          <ChevronLeft size={16} /> Retour
+        </button>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Mon espace propriétaire</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{machines.length} machine{machines.length > 1 ? 's' : ''} enregistrée{machines.length > 1 ? 's' : ''}</p>
           </div>
-          
-          {/* Placeholder graphique */}
-          <div className="h-32 bg-gray-50 rounded-lg flex items-center justify-center">
-            <div className="text-center text-gray-400">
-              <BarChart3 size={32} className="mx-auto mb-2" />
-              <p className="text-sm">Graphique des vues</p>
-              <p className="text-xs">Bientôt disponible</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================ */}
-      {/* LISTE DES DISTRIBUTEURS */}
-      {/* ============================================ */}
-      <div className="px-4 mt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-800">Mes distributeurs</h2>
           <button
-            onClick={handleAddDistributor}
-            className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1"
+            onClick={() => navigate('/owner/claim')}
+            className="bg-primary text-white px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-1"
           >
-            <Plus size={16} />
-            Ajouter
+            <Plus size={16} /> Ajouter
           </button>
         </div>
+      </div>
 
-        {distributors.length > 0 ? (
-          <div className="space-y-3">
-            {distributors.map((distributor) => (
-              <OwnerDistributorCard
-                key={distributor.id}
-                distributor={distributor}
-                onEdit={handleEditDistributor}
-                onDelete={handleDeleteDistributor}
-                onViewStats={handleViewStats}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl p-8 text-center">
-            <div className="text-5xl mb-4">🏪</div>
-            <h3 className="font-bold text-gray-800 mb-2">Aucun distributeur</h3>
-            <p className="text-gray-500 text-sm mb-4">
-              Ajoutez votre premier distributeur pour commencer
-            </p>
-            <Button onClick={handleAddDistributor}>
-              <Plus size={18} className="mr-2" />
-              Ajouter une machine
-            </Button>
+      <div className="px-4 pt-4 space-y-4">
+
+        {/* Stats globales */}
+        {machines.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">Vue d'ensemble</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <Eye size={16} className="text-blue-500" />
+                  <span className="text-xs text-gray-500">Vues totales</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{totalViews.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <Navigation size={16} className="text-green-500" />
+                  <span className="text-xs text-gray-500">Itinéraires</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{totalItineraries.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <Heart size={16} className="text-red-500" />
+                  <span className="text-xs text-gray-500">Favoris</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{totalFavorites.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <Share2 size={16} className="text-purple-500" />
+                  <span className="text-xs text-gray-500">Partages</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{totalShares.toLocaleString()}</p>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* ============================================ */}
-      {/* SECTION AIDE / UPGRADE */}
-      {/* ============================================ */}
-      <div className="px-4 mt-6">
-        <div className="bg-gradient-to-r from-primary to-red-600 rounded-xl p-4 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <TrendingUp size={24} />
+        {/* Machines approuvées */}
+        {machines.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">Mes machines</h2>
+            <div className="space-y-3">
+              {machines.map(machine => {
+                const s = stats[machine.distributor_id] || {}
+                return (
+                  <div key={machine.id} className="bg-white rounded-xl shadow-sm p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-black">{machine.distributor_name || 'Machine sans nom'}</h3>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            machine.subscription_status === 'active'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {machine.subscription_status === 'active' ? '⭐ Pro' : 'Gratuit'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{machine.distributor_address}</p>
+                      </div>
+                      <button
+                        onClick={() => navigate(`/map?distributor=${machine.distributor_id}`)}
+                        className="text-xs text-primary font-medium ml-2"
+                      >
+                        Voir →
+                      </button>
+                    </div>
+
+                    {/* Stats de la machine */}
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center mb-0.5">
+                          <Eye size={12} className="text-blue-400" />
+                        </div>
+                        <p className="text-lg font-bold">{Number(s.total_views || 0).toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">Vues</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center mb-0.5">
+                          <Navigation size={12} className="text-green-400" />
+                        </div>
+                        <p className="text-lg font-bold">{Number(s.total_itineraries || 0).toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">Itin.</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center mb-0.5">
+                          <Heart size={12} className="text-red-400" />
+                        </div>
+                        <p className="text-lg font-bold">{Number(s.total_favorites || 0).toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">Favoris</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center mb-0.5">
+                          <Share2 size={12} className="text-purple-400" />
+                        </div>
+                        <p className="text-lg font-bold">{Number(s.total_shares || 0).toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">Partages</p>
+                      </div>
+                    </div>
+
+                    {/* 30 derniers jours */}
+                    {(s.views_last_30d > 0 || s.itineraries_last_30d > 0) && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+                        <TrendingUp size={13} className="text-primary" />
+                        <span className="text-xs text-gray-500">
+                          30 derniers jours : <strong>{Number(s.views_last_30d || 0)} vues</strong> · <strong>{Number(s.itineraries_last_30d || 0)} itinéraires</strong>
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Bannière abonnement si gratuit */}
+                    {machine.subscription_status !== 'active' && (
+                      <div className="mt-3 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex items-center justify-between">
+                        <p className="text-xs text-primary font-medium">🚀 Passez Pro pour plus de visibilité</p>
+                        <button className="text-xs bg-primary text-white px-2 py-1 rounded-lg font-bold">
+                          Voir offre
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-            <div className="flex-1">
-              <h3 className="font-bold">Boostez votre visibilité</h3>
-              <p className="text-sm text-white/80">Passez en Premium pour apparaître en priorité</p>
-            </div>
-            <ChevronRight size={20} />
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* ============================================ */}
-      {/* LIENS RAPIDES */}
-      {/* ============================================ */}
-      <div className="px-4 mt-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-3">Liens rapides</h2>
-        <div className="space-y-2">
-          <button 
-            onClick={() => navigate('/owner-reports')}
-            className="w-full bg-white rounded-xl p-4 shadow-sm flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <AlertCircle size={20} className="text-orange-500" />
-              <span className="text-gray-700">Signalements reçus</span>
+        {/* Revendications en attente */}
+        {pendingClaims.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">En attente de validation</h2>
+            <div className="space-y-2">
+              {pendingClaims.map(claim => (
+                <div key={claim.id} className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">{claim.distributor_name || 'Machine sans nom'}</p>
+                    <p className="text-xs text-gray-500">{claim.distributor_address}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    claim.status === 'pending' ? 'bg-orange-100 text-orange-700'
+                    : 'bg-red-100 text-red-700'
+                  }`}>
+                    {claim.status === 'pending' ? '⏳ En attente' : '❌ Refusé'}
+                  </span>
+                </div>
+              ))}
             </div>
-            {stats.pendingReports > 0 && (
-              <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
-                {stats.pendingReports}
-              </span>
-            )}
-            <ChevronRight size={18} className="text-gray-400" />
-          </button>
+          </div>
+        )}
 
-          <button 
-            onClick={() => navigate('/owner-settings')}
-            className="w-full bg-white rounded-xl p-4 shadow-sm flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Users size={20} className="text-blue-500" />
-              <span className="text-gray-700">Mon profil commerçant</span>
-            </div>
-            <ChevronRight size={18} className="text-gray-400" />
-          </button>
-
-          <button 
-            onClick={() => window.open('mailto:distriauto24.7@gmail.com')}
-            className="w-full bg-white rounded-xl p-4 shadow-sm flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Calendar size={20} className="text-green-500" />
-              <span className="text-gray-700">Contacter le support</span>
-            </div>
-            <ChevronRight size={18} className="text-gray-400" />
-          </button>
-        </div>
+        {/* Aucune machine */}
+        {machines.length === 0 && pendingClaims.length === 0 && (
+          <div className="bg-white rounded-xl p-8 text-center shadow-sm">
+            <p className="text-4xl mb-4">🤖</p>
+            <h2 className="text-xl font-bold mb-2">Aucune machine enregistrée</h2>
+            <p className="text-sm text-gray-500 mb-6">Revendiquez vos machines pour accéder à leurs statistiques et les mettre en avant.</p>
+            <button
+              onClick={() => navigate('/owner/claim')}
+              className="bg-primary text-white px-6 py-3 rounded-lg font-bold text-sm"
+            >
+              + Revendiquer une machine
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
