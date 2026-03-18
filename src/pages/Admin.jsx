@@ -39,6 +39,10 @@ export default function Admin() {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('pending') // pending | approved | rejected | all
+  const [activeTab, setActiveTab] = useState('reports') // reports | claims
+  const [claims, setClaims] = useState([])
+  const [claimsLoading, setClaimsLoading] = useState(false)
+  const [claimsCounts, setClaimsCounts] = useState({ pending: 0, approved: 0, rejected: 0 })
   
   // Compteurs par statut
   const [statusCounts, setStatusCounts] = useState({
@@ -51,6 +55,7 @@ export default function Admin() {
   useEffect(() => {
     if (isAdmin) {
       loadReports()
+      loadClaims()
     }
   }, [filter, isAdmin])
 
@@ -102,6 +107,48 @@ export default function Admin() {
       console.error('Erreur lors du chargement des signalements:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadClaims = async () => {
+    setClaimsLoading(true)
+    const { data } = await supabase
+      .from('machine_ownership')
+      .select('*, users:user_id(email)')
+      .order('created_at', { ascending: false })
+    setClaims(data || [])
+    const pending = (data || []).filter(c => c.status === 'pending').length
+    const approved = (data || []).filter(c => c.status === 'approved').length
+    const rejected = (data || []).filter(c => c.status === 'rejected').length
+    setClaimsCounts({ pending, approved, rejected })
+    setClaimsLoading(false)
+  }
+
+  const approveClaim = async (claim) => {
+    if (!confirm(`Approuver la revendication de "${claim.distributor_name}" ?`)) return
+    const { error } = await supabase
+      .from('machine_ownership')
+      .update({ status: 'approved', updated_at: new Date().toISOString() })
+      .eq('id', claim.id)
+    if (!error) {
+      alert('✅ Revendication approuvée !')
+      loadClaims()
+    } else {
+      alert('Erreur : ' + error.message)
+    }
+  }
+
+  const rejectClaim = async (claim) => {
+    if (!confirm(`Rejeter la revendication de "${claim.distributor_name}" ?`)) return
+    const { error } = await supabase
+      .from('machine_ownership')
+      .update({ status: 'rejected', updated_at: new Date().toISOString() })
+      .eq('id', claim.id)
+    if (!error) {
+      alert('❌ Revendication rejetée')
+      loadClaims()
+    } else {
+      alert('Erreur : ' + error.message)
     }
   }
 
@@ -252,7 +299,107 @@ export default function Admin() {
 
       {/* Titre */}
       <h1 className="text-3xl font-bold text-center mb-2">Administration</h1>
-      <p className="text-center text-gray-600 mb-8">Gestion des signalements</p>
+      <p className="text-center text-gray-600 mb-4">Gestion des signalements et revendications</p>
+
+      {/* Onglets */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <div className="flex bg-gray-100 rounded-xl p-1">
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'}`}
+          >
+            Signalements {statusCounts.pending > 0 && <span className="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">{statusCounts.pending}</span>}
+          </button>
+          <button
+            onClick={() => setActiveTab('claims')}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'claims' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'}`}
+          >
+            Revendications {claimsCounts.pending > 0 && <span className="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">{claimsCounts.pending}</span>}
+          </button>
+        </div>
+      </div>
+
+      {/* ---- ONGLET REVENDICATIONS ---- */}
+      {activeTab === 'claims' && (
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* Filtres revendications */}
+          <div className="flex gap-2 flex-wrap justify-center mb-4">
+            {[
+              { key: 'all', label: `Toutes (${claims.length})` },
+              { key: 'pending', label: `En attente (${claimsCounts.pending})` },
+              { key: 'approved', label: `Approuvées (${claimsCounts.approved})` },
+              { key: 'rejected', label: `Rejetées (${claimsCounts.rejected})` },
+            ].map(f => (
+              <button key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filter === f.key ? 'bg-primary text-white' : 'bg-white text-gray-700'}`}
+              >{f.label}</button>
+            ))}
+          </div>
+
+          {claimsLoading && (
+            <div className="text-center py-8">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>
+          )}
+
+          {!claimsLoading && claims
+            .filter(c => filter === 'all' || c.status === filter)
+            .map(claim => (
+              <div key={claim.id} className="bg-white rounded-xl p-5 shadow-sm">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-bold text-black">{claim.distributor_name || 'Machine sans nom'}</h3>
+                    <p className="text-sm text-gray-500">{claim.distributor_address}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 ml-2 ${
+                    claim.status === 'pending' ? 'bg-orange-100 text-orange-700'
+                    : claim.status === 'approved' ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                  }`}>
+                    {claim.status === 'pending' ? '⏳ En attente'
+                      : claim.status === 'approved' ? '✅ Approuvée' : '❌ Rejetée'}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-sm text-gray-600 mb-3">
+                  <p>👤 Utilisateur : <span className="font-medium">{claim.users?.email || claim.user_id}</span></p>
+                  <p>🤖 Machine ID : <span className="font-mono text-xs">{claim.distributor_id}</span></p>
+                  <p>📅 {new Date(claim.created_at).toLocaleDateString('fr-FR')}</p>
+                  {claim.justification && (
+                    <div className="mt-2 bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 font-medium mb-1">Justification :</p>
+                      <p className="text-sm italic">"{claim.justification}"</p>
+                    </div>
+                  )}
+                </div>
+
+                {claim.status === 'pending' && (
+                  <div className="flex gap-2 pt-3 border-t">
+                    <button onClick={() => approveClaim(claim)}
+                      className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2">
+                      <CheckCircle size={16} /> Approuver
+                    </button>
+                    <button onClick={() => rejectClaim(claim)}
+                      className="flex-1 bg-red-500 text-white py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2">
+                      <XCircle size={16} /> Rejeter
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          }
+
+          {!claimsLoading && claims.filter(c => filter === 'all' || c.status === filter).length === 0 && (
+            <div className="bg-white rounded-xl p-8 text-center text-gray-400">
+              Aucune revendication
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ---- ONGLET SIGNALEMENTS ---- */}
+      {activeTab === 'reports' && (<>
 
       {/* Filtres */}
       <div className="max-w-4xl mx-auto mb-6">
@@ -390,6 +537,7 @@ export default function Admin() {
       <div className="max-w-4xl mx-auto mt-8 text-center text-gray-600 text-sm">
         Total : {reports.length} signalement{reports.length > 1 ? 's' : ''}
       </div>
+      </>)}
     </div>
   )
 }
