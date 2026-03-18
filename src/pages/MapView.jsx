@@ -63,9 +63,21 @@ const createCategoryIcon = (category) => {
   })
 }
 
+// Mapping catégorie -> icône publique (URLs absolues pour Leaflet mobile)
+const categoryPublicIcons = {
+  pain: '/icons/pain.png',
+  pizza: '/icons/pizza.png',
+  burger: '/icons/burger.png',
+  alimentaire: '/icons/alimentaire.png',
+  fleurs: '/icons/fleurs.png',
+  parapharmacie: '/icons/parapharmacie.png',
+  autres: '/icons/autres.png',
+}
+
 // Icône PRO — plus grande, colorée, avec badge étoile
 const createProIcon = (category) => {
   const config = categoryIcons[category] || categoryIcons.default
+  const iconUrl = categoryPublicIcons[category] || categoryPublicIcons.autres
   return L.divIcon({
     html: `
       <div style="position:relative;width:52px;height:52px;">
@@ -81,12 +93,11 @@ const createProIcon = (category) => {
           border: 3px solid white;
           box-shadow: 0 3px 12px rgba(0,0,0,0.4);
         ">
-          <img src="${config.icon}" style="
+          <img src="${iconUrl}" style="
             transform: rotate(45deg);
             width: 28px;
             height: 28px;
             object-fit: contain;
-            filter: brightness(0) invert(1);
           " />
         </div>
         <div style="
@@ -103,7 +114,8 @@ const createProIcon = (category) => {
           font-size: 11px;
           border: 2px solid white;
           box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-        ">⭐</div>
+          line-height: 1;
+        ">&#11088;</div>
       </div>
     `,
     className: 'custom-marker-pro',
