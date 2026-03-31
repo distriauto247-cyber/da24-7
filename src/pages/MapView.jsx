@@ -74,57 +74,71 @@ const categoryPublicIcons = {
   autres: '/icons/autres.png',
 }
 
-// Icône PRO — plus grande, colorée, avec badge étoile
+// Injection CSS animation pulsation (une seule fois)
+if (typeof window !== 'undefined' && !document.getElementById('pro-pulse-style')) {
+  const style = document.createElement('style')
+  style.id = 'pro-pulse-style'
+  style.innerHTML = `
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      70% { transform: scale(1.6); opacity: 0; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    @keyframes pulse-dot {
+      0% { transform: rotate(-45deg) scale(1); }
+      50% { transform: rotate(-45deg) scale(1.08); }
+      100% { transform: rotate(-45deg) scale(1); }
+    }
+    .pro-pulse-ring {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50% 50% 50% 0;
+      background-color: #E53935;
+      opacity: 0;
+      animation: pulse-ring 2s ease-out infinite;
+    }
+    .pro-pulse-inner {
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+  `
+  document.head.appendChild(style)
+}
+
+// Icône PRO — marqueur pulsant
 const createProIcon = (category) => {
   const config = categoryIcons[category] || categoryIcons.default
   const iconUrl = categoryPublicIcons[category] || categoryPublicIcons.autres
   return L.divIcon({
     html: `
-      <div style="position:relative;width:52px;height:52px;">
-        <div style="
+      <div style="position:relative;width:48px;height:48px;">
+        <div class="pro-pulse-ring"></div>
+        <div class="pro-pulse-inner" style="
           background-color: ${config.color};
-          width: 52px;
-          height: 52px;
+          width: 48px;
+          height: 48px;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           display: flex;
           align-items: center;
           justify-content: center;
           border: 3px solid white;
-          box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+          box-shadow: 0 3px 14px rgba(0,0,0,0.35);
+          position: relative;
+          z-index: 1;
         ">
           <img src="${iconUrl}" style="
             transform: rotate(45deg);
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             object-fit: contain;
           " />
         </div>
-        <div style="
-          position: absolute;
-          top: -6px;
-          right: -6px;
-          background: #FFD700;
-          border-radius: 50%;
-          width: 18px;
-          height: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 2px solid white;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-          font-size: 10px;
-          font-weight: bold;
-          color: #B8860B;
-          line-height: 1;
-          font-family: Arial, sans-serif;
-        ">PRO</div>
       </div>
     `,
     className: 'custom-marker-pro',
-    iconSize: [52, 52],
-    iconAnchor: [26, 52],
-    popupAnchor: [0, -52],
+    iconSize: [48, 48],
+    iconAnchor: [24, 48],
+    popupAnchor: [0, -48],
   })
 }
 
