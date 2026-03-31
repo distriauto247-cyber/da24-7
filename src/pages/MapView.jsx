@@ -1133,6 +1133,18 @@ export default function MapView() {
               </div>
             )}
 
+            {/* Bouton signaler un problème */}
+            {bottomSheetExpanded && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <button
+                  onClick={() => navigate(`/report-issue?id=${selectedDistributor.id}&name=${encodeURIComponent(selectedDistributor.name || 'Distributeur automatique')}`)}
+                  className="w-full flex items-center justify-center gap-2 text-orange-500 text-xs font-medium py-2 rounded-lg border border-orange-200 bg-orange-50"
+                >
+                  <span>⚠️</span> Signaler un problème sur cette machine
+                </button>
+              </div>
+            )}
+
             {/* Correction de catégorie (si expandé) */}}
             {bottomSheetExpanded && (
               <div className="mt-3 pt-3 border-t border-gray-100">
