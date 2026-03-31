@@ -184,10 +184,13 @@ export default function AddDistributor() {
           longitude: reportForm.longitude,
           comment: reportForm.comment,
           email: reportForm.email,
+          report_type: 'new_machine',
           status: 'pending'
         }])
       if (error) throw error
-      alert('Merci pour votre signalement ! Il sera vérifié prochainement.')
+
+      // Afficher message orienté abonnement
+      alert('Merci pour votre signalement !\n\nSi vous êtes propriétaire de cette machine, rejoignez DA24.7 pour la gérer, accéder à ses statistiques et être alerté des problèmes signalés par vos clients.')
       navigate('/')
     } catch (error) {
       alert('Erreur lors du signalement : ' + error.message)

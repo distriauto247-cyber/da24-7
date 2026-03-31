@@ -124,6 +124,24 @@ export default function Admin() {
     setClaimsLoading(false)
   }
 
+  // Envoyer une notification push via Edge Function
+  const sendPushNotification = async (userId, title, body, data = {}) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ user_id: userId, title, body, data })
+      })
+    } catch (err) {
+      console.warn('Notification non envoyée:', err)
+    }
+  }
+
   const approveClaim = async (claim) => {
     if (!confirm(`Approuver la revendication de "${claim.distributor_name}" ?`)) return
     const { error } = await supabase
@@ -131,6 +149,13 @@ export default function Admin() {
       .update({ status: 'approved', updated_at: new Date().toISOString() })
       .eq('id', claim.id)
     if (!error) {
+      // Envoyer une notification push au propriétaire
+      await sendPushNotification(
+        claim.user_id,
+        '✅ Revendication approuvée !',
+        `Votre machine "${claim.distributor_name}" est maintenant active sur DA24.7. Découvrez vos statistiques !`,
+        { url: '/owner/dashboard' }
+      )
       alert('✅ Revendication approuvée !')
       loadClaims()
     } else {
@@ -153,16 +178,50 @@ export default function Admin() {
   }
 
   const approveReport = async (report) => {
-    if (!confirm(`Approuver ce signalement et créer un distributeur ?`)) return
+    // Choix : notifier le propriétaire ou créer directement
+    const choice = window.confirm(
+      `Ce signalement concerne : ${report.address}\n\n` +
+      `Cliquez OK pour notifier le propriétaire potentiel et mettre en attente.\n` +
+      `Cliquez Annuler pour créer directement la machine.`
+    )
 
     try {
-      // Extraire la ville de l'adresse (ex: "85600 Montaigu-Vendée" -> "Montaigu-Vendée")
+      if (choice) {
+        // Option 1 : Marquer comme "notified" et envoyer push si user connu
+        const { error: updateError } = await supabase
+          .from('distributor_reports')
+          .update({ status: 'notified' })
+          .eq('id', report.id)
+        if (updateError) throw updateError
+
+        // Chercher si un utilisateur avec cet email a un token push
+        if (report.email) {
+          const { data: userData } = await supabase
+            .from('push_tokens')
+            .select('user_id')
+            .limit(1)
+
+          if (userData && userData.length > 0) {
+            await sendPushNotification(
+              userData[0].user_id,
+              '🤖 Votre machine est sur DA24.7 !',
+              'Un utilisateur a signalé votre machine. Revendiquez-la pour gérer sa visibilité et accéder à ses stats.',
+              { url: '/owner/dashboard' }
+            )
+          }
+        }
+
+        alert('✅ Signalement marqué "notifié". Le propriétaire sera contacté.')
+        await loadReports()
+        return
+      }
+
+      // Option 2 : Création directe
       const addressParts = report.address.split(',').map(p => p.trim())
       const lastPart = addressParts[addressParts.length - 1] || ''
-      const cityMatch = lastPart.match(/\d{5}\s+(.+)/) // Match "85600 Montaigu-Vendée"
+      const cityMatch = lastPart.match(/\d{5}\s+(.+)/)
       const city = cityMatch ? cityMatch[1] : lastPart || 'Non renseigné'
 
-      // 1. Créer le distributeur dans la table distributors
       const { data: newDistributor, error: distError } = await supabase
         .from('distributors')
         .insert([{
@@ -172,13 +231,13 @@ export default function Admin() {
           city: city,
           latitude: report.latitude,
           longitude: report.longitude,
-          hours: '24h/24 - 7j/7', // Valeur par défaut
+          hours: '24h/24 - 7j/7',
           products: 'À définir',
           payment_methods: 'CB',
           contact: report.email || 'Non renseigné',
           description: report.comment || '',
-          status: 'active', // Directement actif
-          owner_id: null // Pas de propriétaire pour les signalements
+          status: 'active',
+          owner_id: null
         }])
         .select()
 
