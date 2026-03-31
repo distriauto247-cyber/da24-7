@@ -136,7 +136,9 @@ export default function OwnerDashboard() {
                               ? 'bg-green-100 text-green-700'
                               : 'bg-gray-100 text-gray-600'
                           }`}>
-                            {machine.subscription_status === 'active' ? '⭐ Pro' : 'Gratuit'}
+                            {machine.subscription_status === 'active' ? '🔴 Premium'
+                            : machine.subscription_status === 'essentiel' ? '🔵 Essentiel'
+                            : 'Gratuit'}
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{machine.distributor_address}</p>
@@ -191,15 +193,34 @@ export default function OwnerDashboard() {
                       </div>
                     )}
 
-                    {/* Bannière abonnement si gratuit */}
-                    {machine.subscription_status !== 'active' && (
+                    {/* Bannière abonnement */}
+                    {machine.subscription_status === 'free' || !machine.subscription_status ? (
                       <div className="mt-3 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex items-center justify-between">
-                        <p className="text-xs text-primary font-medium">🚀 Passez Pro pour plus de visibilité</p>
-                        <button className="text-xs bg-primary text-white px-2 py-1 rounded-lg font-bold">
-                          Voir offre
+                        <div>
+                          <p className="text-xs text-primary font-bold">🚀 Boostez votre visibilité</p>
+                          <p className="text-xs text-gray-500">Marqueur pulsant, stats, alertes...</p>
+                        </div>
+                        <button
+                          onClick={() => navigate('/owner/subscription')}
+                          className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg font-bold flex-shrink-0 ml-2"
+                        >
+                          Voir offres
                         </button>
                       </div>
-                    )}
+                    ) : machine.subscription_status === 'essentiel' ? (
+                      <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-blue-700 font-bold">⬆️ Passez Premium</p>
+                          <p className="text-xs text-gray-500">Ajoutez les alertes consommateurs</p>
+                        </div>
+                        <button
+                          onClick={() => navigate('/owner/subscription')}
+                          className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold flex-shrink-0 ml-2"
+                        >
+                          24 €/mois
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 )
               })}

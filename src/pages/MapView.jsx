@@ -1145,7 +1145,7 @@ export default function MapView() {
               </div>
             )}
 
-            {/* Correction de catégorie (si expandé) */}}
+            {/* Correction de catégorie (si expandé) */}
             {bottomSheetExpanded && (
               <div className="mt-3 pt-3 border-t border-gray-100">
                 {!showCategoryCorrection ? (

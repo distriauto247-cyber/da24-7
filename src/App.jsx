@@ -31,6 +31,7 @@ import AdminInstallers from './pages/AdminInstallers'
 import OwnerDashboard from './pages/OwnerDashboard'
 import OwnerClaim from './pages/OwnerClaim'
 import ReportIssue from './pages/ReportIssue'
+import OwnerSubscription from './pages/OwnerSubscription'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -129,6 +130,7 @@ function App() {
           <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           <Route path="/owner/claim" element={<OwnerClaim />} />
           <Route path="/report-issue" element={<ReportIssue />} />
+          <Route path="/owner/subscription" element={<OwnerSubscription />} />
         </Route>
         <Route element={<MainLayout user={user} />}>
   {/* ... autres routes */}
