@@ -210,7 +210,11 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bouton ajouter une machine */}
+      {/* Bouton Signaler une machine */}
+      <Button onClick={() => navigate('/add-distributor')} className="mb-3 text-lg text-white py-4">
+        📍 SIGNALER UNE MACHINE
+      </Button>
+
       {/* Section installateurs partenaires */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
@@ -231,10 +235,6 @@ export default function Home() {
           <span className="text-gray-300 text-lg">›</span>
         </button>
       </div>
-
-      <Button onClick={() => navigate('/add-distributor')} className="mb-6 text-lg text-white py-4">
-        AJOUTER UNE MACHINE
-      </Button>
 
       {/* Barre de navigation en bas */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">

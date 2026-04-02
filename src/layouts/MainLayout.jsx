@@ -5,6 +5,7 @@ import iconAccueil from '../assets/icons/accueil.png'
 import iconCarte from '../assets/icons/carte.png'
 import iconFavoris from '../assets/icons/favoris.png'
 import iconParametres from '../assets/icons/parametres.png'
+import iconProprietaire from '../assets/icons/proprietaire.png'
 
 export default function MainLayout({ user }) {
   const navigate = useNavigate()
@@ -14,6 +15,7 @@ export default function MainLayout({ user }) {
     { icon: iconAccueil, label: 'Accueil', path: '/', hideOnHome: true },
     { icon: iconCarte, label: 'Carte directe', path: '/map', hideOnHome: false },
     { icon: iconFavoris, label: 'Favoris', path: '/favorites', hideOnHome: false },
+    { icon: iconProprietaire, label: 'Propriétaire', path: '/owner/dashboard', hideOnHome: false },
     { icon: iconParametres, label: 'Paramètres', path: '/settings', hideOnHome: false },
   ]
 
