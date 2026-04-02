@@ -212,7 +212,7 @@ export default function Home() {
 
       {/* Bouton Signaler une machine */}
       <Button onClick={() => navigate('/add-distributor')} className="mb-3 text-lg text-white py-4">
-        📍 SIGNALER UNE MACHINE
+        SIGNALER UNE MACHINE
       </Button>
 
       {/* Section installateurs partenaires */}

@@ -15,7 +15,7 @@ export default function MainLayout({ user }) {
     { icon: iconAccueil, label: 'Accueil', path: '/', hideOnHome: true },
     { icon: iconCarte, label: 'Carte directe', path: '/map', hideOnHome: false },
     { icon: iconFavoris, label: 'Favoris', path: '/favorites', hideOnHome: false },
-    { icon: iconProprietaire, label: 'Propriétaire', path: '/owner/dashboard', hideOnHome: false },
+    { icon: iconProprietaire, label: 'Propriétaire', path: '/owner/gateway', hideOnHome: false },
     { icon: iconParametres, label: 'Paramètres', path: '/settings', hideOnHome: false },
   ]
 
