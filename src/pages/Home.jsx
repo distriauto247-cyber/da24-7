@@ -17,6 +17,7 @@ import iconAutres from '../assets/icons/autres.png'
 import iconCarte from '../assets/icons/carte.png'
 import iconFavoris from '../assets/icons/favoris.png'
 import iconParametres from '../assets/icons/parametres.png'
+import iconInstallateur from '../assets/icons/installateur.svg'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -212,7 +213,7 @@ export default function Home() {
 
       {/* Bouton Signaler une machine */}
       <Button onClick={() => navigate('/add-distributor')} className="mb-3 text-lg text-white py-4">
-        SIGNALER UNE MACHINE
+        📍 SIGNALER UNE MACHINE
       </Button>
 
       {/* Section installateurs partenaires */}
@@ -226,10 +227,10 @@ export default function Home() {
           className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border border-gray-100"
         >
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-2xl">🏭</span>
+            <img src={iconInstallateur} alt="Installateurs" className="w-8 h-8 object-contain" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-bold text-black text-sm">Trouvez un installateur</p>
+            <p className="font-bold text-black text-sm">Trouver un installateur</p>
             <p className="text-xs text-gray-500 mt-0.5">Professionnels de la distribution automatique</p>
           </div>
           <span className="text-gray-300 text-lg">›</span>
