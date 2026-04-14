@@ -1048,9 +1048,7 @@ export default function MapView() {
                     className="w-8 h-8 object-contain"
                   />
                   <h3 className="font-bold text-lg">{selectedDistributor.name}</h3>
-                  {proOwners.has(String(selectedDistributor.id)) && (
-                    <span className="flex-shrink-0 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-bold">⭐ Pro</span>
-                  )}
+
                 </div>
                 <p className="text-sm text-gray-600">{selectedDistributor.address}</p>
               </div>

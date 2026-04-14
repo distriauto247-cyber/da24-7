@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { ChevronRight, LogIn, PlusCircle } from 'lucide-react'
+import iconProprietaire from '../assets/icons/proprietaire.png'
 
 export default function OwnerGateway() {
   const navigate = useNavigate()
@@ -43,7 +44,7 @@ export default function OwnerGateway() {
   if (user && !hasMachines) return (
     <div className="min-h-screen bg-secondary flex flex-col items-center justify-center px-6">
       <div className="bg-white rounded-2xl p-8 text-center shadow-sm w-full max-w-sm">
-        <p className="text-5xl mb-4">🤖</p>
+        <img src={iconProprietaire} alt="Propriétaire" className="w-20 h-20 object-contain mx-auto mb-4" />
         <h2 className="text-xl font-bold mb-2">Bienvenue !</h2>
         <p className="text-sm text-gray-500 mb-6">
           Vous n'avez pas encore de machine enregistrée. Revendiquez votre première machine pour accéder à vos statistiques et gérer votre visibilité.
@@ -70,7 +71,7 @@ export default function OwnerGateway() {
     <div className="min-h-screen bg-secondary pb-24">
       {/* Header */}
       <div className="bg-white px-4 pt-10 pb-6 shadow-sm text-center">
-        <p className="text-5xl mb-3">🤖</p>
+        <img src={iconProprietaire} alt="Propriétaire" className="w-20 h-20 object-contain mx-auto mb-4" />
         <h1 className="text-2xl font-bold">Espace Propriétaire</h1>
         <p className="text-sm text-gray-500 mt-2">
           Gérez vos machines, suivez vos statistiques et boostez votre visibilité
