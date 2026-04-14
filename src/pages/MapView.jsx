@@ -32,34 +32,27 @@ const categoryIcons = {
 
 // Créer une icône Leaflet personnalisée avec image PNG
 const createCategoryIcon = (category) => {
-  const config = categoryIcons[category] || categoryIcons.default
-  
   return L.divIcon({
     html: `
       <div style="
-        background-color: white;
-        width: 40px;
-        height: 40px;
+        background-color: #cccccc;
+        width: 28px;
+        height: 28px;
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 3px solid ${config.color};
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 2px solid #aaaaaa;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        opacity: 0.55;
       ">
-        <img src="${config.icon}" style="
-          transform: rotate(45deg); 
-          width: 24px; 
-          height: 24px;
-          object-fit: contain;
-        " />
       </div>
     `,
     className: 'custom-marker',
-    iconSize: [40, 40],
-    iconAnchor: [20, 40],
-    popupAnchor: [0, -40],
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
   })
 }
 
