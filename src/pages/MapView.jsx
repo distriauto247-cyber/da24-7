@@ -1063,39 +1063,52 @@ export default function MapView() {
 
             {/* Boutons d'action */}
             <div className="space-y-2">
-              {/* Bouton ITINÉRAIRE */}
+              {/* Bouton ITINÉRAIRE — toujours visible */}
               <button
                 onClick={() => handleItinerary(selectedDistributor)}
                 className="w-full bg-primary text-white py-3 rounded-lg font-bold text-sm"
               >
                 ITINÉRAIRE
               </button>
-              
-              {/* Boutons FAVORI et PARTAGER */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleAddToFavorites(selectedDistributor)}
-                  className={`flex-1 border-2 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 ${
-                    isFavorite 
-                      ? 'bg-primary border-primary text-white' 
-                      : 'border-primary text-primary'
-                  }`}
-                >
-                  <Heart size={18} className={isFavorite ? 'fill-white' : ''} />
-                  {isFavorite ? 'RETIRER DES FAVORIS' : 'AJOUTER EN FAVORI'}
-                </button>
-                <button
-                  onClick={() => handleShare(selectedDistributor)}
-                  className="flex-1 border-2 border-primary text-primary py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
-                >
-                  <Share2 size={18} />
-                  PARTAGER
-                </button>
-              </div>
+
+              {/* Favoris + Partager — uniquement machines abonnées */}
+              {proOwners.has(String(selectedDistributor.id)) ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleAddToFavorites(selectedDistributor)}
+                    className={`flex-1 border-2 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 ${
+                      isFavorite
+                        ? 'bg-primary border-primary text-white'
+                        : 'border-primary text-primary'
+                    }`}
+                  >
+                    <Heart size={18} className={isFavorite ? 'fill-white' : ''} />
+                    {isFavorite ? 'RETIRER DES FAVORIS' : 'AJOUTER EN FAVORI'}
+                  </button>
+                  <button
+                    onClick={() => handleShare(selectedDistributor)}
+                    className="flex-1 border-2 border-primary text-primary py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+                  >
+                    <Share2 size={18} />
+                    PARTAGER
+                  </button>
+                </div>
+              ) : (
+                /* Message propriétaire pour machine non abonnée */
+                <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-center">
+                  <p className="text-xs text-gray-500">🔒 Favoris et partage réservés aux machines référencées</p>
+                  <button
+                    onClick={() => navigate('/owner/gateway')}
+                    className="text-xs text-primary font-medium mt-1 underline"
+                  >
+                    Propriétaire ? Référencez votre machine →
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Infos supplémentaires (si expandé) */}
-            {bottomSheetExpanded && selectedDistributor.description && (
+            {/* Infos supplémentaires — uniquement machines abonnées */}
+            {bottomSheetExpanded && proOwners.has(String(selectedDistributor.id)) && selectedDistributor.description && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600">{selectedDistributor.description}</p>
               </div>
@@ -1136,56 +1149,7 @@ export default function MapView() {
               </div>
             )}
 
-            {/* Correction de catégorie (si expandé) */}
-            {bottomSheetExpanded && (
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                {!showCategoryCorrection ? (
-                  <button
-                    onClick={() => setShowCategoryCorrection(true)}
-                    className="text-xs text-gray-400 underline w-full text-center"
-                  >
-                    ✏️ Catégorie incorrecte ? Suggérer une correction
-                  </button>
-                ) : (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-2">Sélectionne la bonne catégorie :</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { value: 'pain', label: 'Pain', icon: iconPain },
-                        { value: 'pizza', label: 'Pizza', icon: iconPizza },
-                        { value: 'burger', label: 'Burger', icon: iconBurger },
-                        { value: 'alimentaire', label: 'Alimentaire', icon: iconAlimentaire },
-                        { value: 'fleurs', label: 'Fleurs', icon: iconFleurs },
-                        { value: 'parapharmacie', label: 'Pharma', icon: iconParapharmacie },
-                        { value: 'autres', label: 'Autres', icon: iconAutres },
-                      ].map(cat => (
-                        <button
-                          key={cat.value}
-                          onClick={() => handleCorrectCategory(selectedDistributor, cat.value)}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border-2 transition ${
-                            selectedDistributor.category === cat.value
-                              ? 'border-primary bg-primary text-white'
-                              : 'border-gray-200 text-gray-600'
-                          }`}
-                        >
-                          <img src={cat.icon} alt={cat.label} className="w-4 h-4 object-contain" />
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setShowCategoryCorrection(false)}
-                      className="text-xs text-gray-400 mt-2 w-full text-center"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                )}
-                {categoryCorrectSuccess && (
-                  <p className="text-xs text-green-600 text-center mt-1">✅ Merci pour votre correction !</p>
-                )}
-              </div>
-            )}
+
           </div>
         </div>
       )}

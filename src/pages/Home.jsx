@@ -213,7 +213,7 @@ export default function Home() {
 
       {/* Bouton Signaler une machine */}
       <Button onClick={() => navigate('/add-distributor')} className="mb-3 text-lg text-white py-4">
-        📍 SIGNALER UNE MACHINE
+        SIGNALER UNE MACHINE
       </Button>
 
       {/* Section installateurs partenaires */}
@@ -226,8 +226,8 @@ export default function Home() {
           onClick={() => navigate('/installers')}
           className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 border border-gray-100"
         >
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-            <img src={iconInstallateur} alt="Installateurs" className="w-8 h-8 object-contain" />
+          <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+            <img src={iconInstallateur} alt="Installateurs" className="w-12 h-12 object-contain" />
           </div>
           <div className="flex-1 text-left">
             <p className="font-bold text-black text-sm">Trouver un installateur</p>
