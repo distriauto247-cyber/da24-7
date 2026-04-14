@@ -84,10 +84,11 @@ export default function OwnerGateway() {
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
           <h2 className="font-bold text-sm text-gray-700 uppercase tracking-wide">Pourquoi rejoindre DA24.7 ?</h2>
           {[
-            { icon: '📊', title: 'Statistiques en temps réel', desc: 'Vues, itinéraires, favoris, partages de vos machines' },
-            { icon: '🔴', title: 'Marqueur pulsant visible', desc: 'Vos machines se démarquent sur la carte' },
-            { icon: '⚠️', title: 'Alertes consommateurs', desc: 'Soyez notifié des problèmes signalés sur vos machines' },
-            { icon: '🚀', title: 'Priorité d\'affichage', desc: 'Apparaissez en premier dans les résultats' },
+            { icon: '📊', title: 'Statistiques en temps réel', desc: 'Vues, itinéraires, favoris, partages — sachez combien de clients passent devant votre machine' },
+            { icon: '🎨', title: 'Marqueur coloré et identifiable', desc: 'Votre machine se distingue des machines grises anonymes sur la carte' },
+            { icon: '🔒', title: 'Favoris & partage débloqués', desc: 'Les utilisateurs peuvent sauvegarder et partager votre machine — vos clients reviennent' },
+            { icon: '⚠️', title: 'Alertes consommateurs (Premium)', desc: 'Soyez notifié en temps réel des problèmes signalés sur vos machines' },
+            { icon: '🚀', title: 'Priorité d\'affichage', desc: 'Votre machine apparaît avant les machines non référencées' },
           ].map((item, i) => (
             <div key={i} className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{item.icon}</span>
