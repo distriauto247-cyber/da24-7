@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { ChevronRight, LogIn, PlusCircle } from 'lucide-react'
-import iconProprietaire from '../assets/icons/proprietaire.png'
+import iconProprietaire from '../assets/icons/proprietaire.svg'
 
 export default function OwnerGateway() {
   const navigate = useNavigate()

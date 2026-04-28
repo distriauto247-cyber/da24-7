@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+  <!-- Machine -->
+  <rect x="16" y="4" width="26" height="34" rx="5" fill="#E53935"/>
+  <rect x="20" y="9" width="7" height="6" rx="2" fill="white" opacity="0.9"/>
+  <rect x="30" y="9" width="7" height="6" rx="2" fill="white" opacity="0.9"/>
+  <rect x="20" y="17" width="7" height="6" rx="2" fill="white" opacity="0.9"/>
+  <rect x="30" y="17" width="7" height="6" rx="2" fill="white" opacity="0.9"/>
+  <rect x="20" y="30" width="17" height="5" rx="2.5" fill="white" opacity="0.75"/>
+  <!-- Personne -->
+  <circle cx="9" cy="34" r="6" fill="#E53935"/>
+  <path d="M2,50 C2,42 5,40 9,40 C13,40 16,42 16,50" fill="#E53935"/>
+</svg>

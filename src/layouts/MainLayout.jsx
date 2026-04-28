@@ -5,7 +5,7 @@ import iconAccueil from '../assets/icons/accueil.png'
 import iconCarte from '../assets/icons/carte.png'
 import iconFavoris from '../assets/icons/favoris.png'
 import iconParametres from '../assets/icons/parametres.png'
-import iconProprietaire from '../assets/icons/proprietaire.png'
+import iconProprietaire from '../assets/icons/proprietaire.svg'
 
 export default function MainLayout({ user }) {
   const navigate = useNavigate()

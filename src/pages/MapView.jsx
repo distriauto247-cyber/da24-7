@@ -67,71 +67,36 @@ const categoryPublicIcons = {
   autres: '/icons/autres.png',
 }
 
-// Injection CSS animation pulsation (une seule fois)
-if (typeof window !== 'undefined' && !document.getElementById('pro-pulse-style')) {
-  const style = document.createElement('style')
-  style.id = 'pro-pulse-style'
-  style.innerHTML = `
-    @keyframes pulse-ring {
-      0% { transform: scale(0.8); opacity: 0.8; }
-      70% { transform: scale(1.6); opacity: 0; }
-      100% { transform: scale(1.6); opacity: 0; }
-    }
-    @keyframes pulse-dot {
-      0% { transform: rotate(-45deg) scale(1); }
-      50% { transform: rotate(-45deg) scale(1.08); }
-      100% { transform: rotate(-45deg) scale(1); }
-    }
-    .pro-pulse-ring {
-      position: absolute;
-      inset: -8px;
-      border-radius: 50% 50% 50% 0;
-      background-color: #E53935;
-      opacity: 0;
-      animation: pulse-ring 2s ease-out infinite;
-    }
-    .pro-pulse-inner {
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-  `
-  document.head.appendChild(style)
-}
-
-// Icône PRO — marqueur pulsant
+// Icône PRO — losange rouge avec icône produit, plus grand que le gris
 const createProIcon = (category) => {
   const config = categoryIcons[category] || categoryIcons.default
   const iconUrl = categoryPublicIcons[category] || categoryPublicIcons.autres
   return L.divIcon({
     html: `
-      <div style="position:relative;width:48px;height:48px;">
-        <div class="pro-pulse-ring"></div>
-        <div class="pro-pulse-inner" style="
-          background-color: ${config.color};
-          width: 48px;
-          height: 48px;
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(-45deg);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 3px solid white;
-          box-shadow: 0 3px 14px rgba(0,0,0,0.35);
-          position: relative;
-          z-index: 1;
-        ">
-          <img src="${iconUrl}" style="
-            transform: rotate(45deg);
-            width: 26px;
-            height: 26px;
-            object-fit: contain;
-          " />
-        </div>
+      <div style="
+        background-color: ${config.color};
+        width: 44px;
+        height: 44px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      ">
+        <img src="${iconUrl}" style="
+          transform: rotate(45deg);
+          width: 24px;
+          height: 24px;
+          object-fit: contain;
+        " />
       </div>
     `,
     className: 'custom-marker-pro',
-    iconSize: [48, 48],
-    iconAnchor: [24, 48],
-    popupAnchor: [0, -48],
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -44],
   })
 }
 
