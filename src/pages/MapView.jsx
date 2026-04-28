@@ -67,14 +67,13 @@ const categoryPublicIcons = {
   autres: '/icons/autres.png',
 }
 
-// Icône PRO — losange rouge avec icône produit, plus grand que le gris
+// Icône PRO — fond rouge, liseré blanc, icône couleur d'origine
 const createProIcon = (category) => {
   const config = categoryIcons[category] || categoryIcons.default
-  const iconUrl = categoryPublicIcons[category] || categoryPublicIcons.autres
   return L.divIcon({
     html: `
       <div style="
-        background-color: ${config.color};
+        background-color: #E53935;
         width: 44px;
         height: 44px;
         border-radius: 50% 50% 50% 0;
@@ -85,10 +84,10 @@ const createProIcon = (category) => {
         border: 3px solid white;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       ">
-        <img src="${iconUrl}" style="
+        <img src="${config.icon}" style="
           transform: rotate(45deg);
-          width: 24px;
-          height: 24px;
+          width: 30px;
+          height: 30px;
           object-fit: contain;
         " />
       </div>
@@ -211,6 +210,9 @@ export default function MapView() {
   const [bottomSheetExpanded, setBottomSheetExpanded] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
   const [displayDistance, setDisplayDistance] = useState(null)
+  // Notation
+  const [ratingData, setRatingData] = useState({ average: 0, count: 0, userRating: 0 })
+  const [ratingLoading, setRatingLoading] = useState(false)
 
   // Catégories disponibles
   const categories = [
@@ -697,6 +699,7 @@ export default function MapView() {
     setBottomSheetExpanded(true)
     checkIfFavorite(distributor.id)
     setInstallerInfo(null)
+    loadRating(distributor.id)
 
     // Charger l'installateur si la machine en a un
     if (distributor.installer_id) {
@@ -739,6 +742,33 @@ export default function MapView() {
     } catch (error) {
       setIsFavorite(false)
     }
+  }
+
+  const loadRating = async (distributorId) => {
+    setRatingData({ average: 0, count: 0, userRating: 0 })
+    const { data } = await supabase
+      .from('distributor_ratings')
+      .select('rating, user_id')
+      .eq('distributor_id', String(distributorId))
+    if (!data || data.length === 0) return
+    const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length
+    const { data: { user } } = await supabase.auth.getUser()
+    const userRating = user ? (data.find(r => r.user_id === user.id)?.rating || 0) : 0
+    setRatingData({ average: avg, count: data.length, userRating })
+  }
+
+  const handleRate = async (distributorId, rating) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { navigate('/login'); return }
+    setRatingLoading(true)
+    await supabase.from('distributor_ratings').upsert({
+      distributor_id: String(distributorId),
+      user_id: user.id,
+      rating,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,distributor_id' })
+    setRatingLoading(false)
+    await loadRating(distributorId)
   }
 
   const handleCategoryChange = (category) => {
@@ -1023,6 +1053,40 @@ export default function MapView() {
               <div className="flex items-center gap-1 text-primary font-medium text-sm mb-3">
                 <MapPin size={14} />
                 <span>À {(displayDistance || selectedDistributor.distance_km).toFixed(1)} km</span>
+              </div>
+            )}
+
+            {/* Notation étoiles */}
+            {proOwners.has(String(selectedDistributor.id)) ? (
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex gap-1">
+                  {[1,2,3,4,5].map(star => (
+                    <button
+                      key={star}
+                      onClick={() => handleRate(selectedDistributor.id, star)}
+                      disabled={ratingLoading}
+                      className="text-2xl leading-none transition-transform active:scale-125"
+                    >
+                      <span style={{ color: star <= (ratingData.userRating || ratingData.average) ? '#F59E0B' : '#D1D5DB' }}>★</span>
+                    </button>
+                  ))}
+                </div>
+                {ratingData.count > 0 ? (
+                  <span className="text-xs text-gray-500">
+                    {ratingData.average.toFixed(1)} · {ratingData.count} avis
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-400">Pas encore noté</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex gap-1">
+                  {[1,2,3,4,5].map(star => (
+                    <span key={star} className="text-2xl leading-none" style={{ color: '#D1D5DB' }}>★</span>
+                  ))}
+                </div>
+                <span className="text-xs text-gray-400">🔒 Notation réservée aux machines référencées</span>
               </div>
             )}
 
