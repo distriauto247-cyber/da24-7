@@ -325,7 +325,14 @@ export default function AddDistributor() {
       <div className="min-h-screen bg-secondary pb-24">
         {/* Header */}
         <div className="bg-white px-4 pt-8 pb-5 shadow-sm text-center">
-          <p className="text-4xl mb-2">📍</p>
+          <svg width="56" height="56" viewBox="0 0 52 52" style={{margin: '0 auto 8px'}}>
+          <path d="M18,2 C11,2 4,9 4,16 C4,26 18,36 18,36 C18,36 32,26 32,16 C32,9 25,2 18,2 Z" fill="#E53935"/>
+          <path d="M18,2 C11,2 4,9 4,16 C4,26 18,36 18,36 C18,36 32,26 32,16 C32,9 25,2 18,2 Z" fill="none" stroke="white" strokeWidth="1.5"/>
+          <circle cx="18" cy="15" r="6" fill="white" opacity="0.9"/>
+          <circle cx="37" cy="34" r="9" fill="none" stroke="#E53935" strokeWidth="2.5"/>
+          <line x1="43" y1="40" x2="49" y2="46" stroke="#E53935" strokeWidth="3" strokeLinecap="round"/>
+          <circle cx="37" cy="34" r="4" fill="#E53935" opacity="0.2"/>
+        </svg>
           <h1 className="text-2xl font-bold">J'ai repéré une machine !</h1>
           <p className="text-sm text-gray-500 mt-1">Signalez-la pour l'ajouter à la carte DA24.7</p>
         </div>
