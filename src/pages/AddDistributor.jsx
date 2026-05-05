@@ -27,7 +27,8 @@ export default function AddDistributor() {
     longitude: null,
     photo: null,
     comment: '',
-    email: ''
+    email: '',
+    owner_email: ''
   })
 
   // Doublon détecté
@@ -175,7 +176,7 @@ export default function AddDistributor() {
       }
       setDoublonDetecte(null)
 
-      const { error } = await supabase
+      const { data: reportData, error } = await supabase
         .from('distributor_reports')
         .insert([{
           category: reportForm.category,
@@ -184,14 +185,14 @@ export default function AddDistributor() {
           longitude: reportForm.longitude,
           comment: reportForm.comment,
           email: reportForm.email,
+          owner_email: reportForm.owner_email || null,
           report_type: 'new_machine',
           status: 'pending'
         }])
+        .select()
       if (error) throw error
 
-      // Afficher message orienté abonnement
-      alert('Merci pour votre signalement !\n\nSi vous êtes propriétaire de cette machine, rejoignez DA24.7 pour la gérer, accéder à ses statistiques et être alerté des problèmes signalés par vos clients.')
-      navigate('/')
+      navigate('/signal-confirmation')
     } catch (error) {
       alert('Erreur lors du signalement : ' + error.message)
     } finally {
@@ -321,20 +322,24 @@ export default function AddDistributor() {
   // ============================================
   if (mode === 'report') {
     return (
-      <div className="min-h-screen bg-secondary px-6 py-8 pb-24">
-        <Logo size="lg" />
-        <h1 className="text-3xl font-bold text-center mb-2 mt-8">Signaler une machine</h1>
-        <p className="text-center text-gray-600 mb-8">
-          Aidez la communauté en signalant un distributeur
-        </p>
-        <form onSubmit={handleReportSubmit} className="max-w-md mx-auto space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Type de machine *</label>
+      <div className="min-h-screen bg-secondary pb-24">
+        {/* Header */}
+        <div className="bg-white px-4 pt-8 pb-5 shadow-sm text-center">
+          <p className="text-4xl mb-2">📍</p>
+          <h1 className="text-2xl font-bold">J'ai repéré une machine !</h1>
+          <p className="text-sm text-gray-500 mt-1">Signalez-la pour l'ajouter à la carte DA24.7</p>
+        </div>
+
+        <form onSubmit={handleReportSubmit} className="px-4 pt-4 space-y-4">
+
+          {/* Type de machine */}
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Type de machine *</label>
             <select
               required
               value={reportForm.category}
               onChange={(e) => setReportForm({...reportForm, category: e.target.value})}
-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-primary"
             >
               <option value="">Sélectionnez une catégorie</option>
               {categories.map(cat => (
@@ -343,54 +348,62 @@ export default function AddDistributor() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Adresse *</label>
+          {/* Adresse */}
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Adresse *</label>
             <input
               type="text"
               required
               value={reportForm.address}
               onChange={(e) => setReportForm({...reportForm, address: e.target.value})}
               placeholder="12 rue de la Paix, 75001 Paris"
-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-primary"
             />
             <button
               type="button"
               onClick={() => handleGeolocation('report')}
-              className="mt-2 text-primary text-sm flex items-center gap-2"
+              className="mt-2 text-primary text-sm flex items-center gap-1"
             >
-              <MapPin size={16} />
-              Utiliser ma position actuelle
+              <MapPin size={14} /> Utiliser ma position actuelle
             </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Photo (optionnel)</label>
-            <div className="w-full bg-white border-2 border-dashed border-gray-300 rounded-lg px-4 py-8 text-center">
-              <Camera size={32} className="mx-auto mb-2 text-gray-400" />
-              <p className="text-sm text-gray-600">Ajoutez une photo du distributeur</p>
-              <input type="file" accept="image/*" className="hidden" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Commentaire</label>
-            <textarea
-              value={reportForm.comment}
-              onChange={(e) => setReportForm({...reportForm, comment: e.target.value})}
-              placeholder="Informations supplémentaires..."
-              rows="3"
-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3"
+          {/* Email propriétaire */}
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Vous connaissez le propriétaire ?
+            </label>
+            <p className="text-xs text-gray-400 mb-2">Son email nous permettra de le contacter pour lui présenter DA24.7</p>
+            <input
+              type="email"
+              value={reportForm.owner_email}
+              onChange={(e) => setReportForm({...reportForm, owner_email: e.target.value})}
+              placeholder="email@proprietaire.fr (optionnel)"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-primary"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Email (optionnel)</label>
+          {/* Commentaire */}
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Commentaire (optionnel)</label>
+            <textarea
+              value={reportForm.comment}
+              onChange={(e) => setReportForm({...reportForm, comment: e.target.value})}
+              placeholder="Informations supplémentaires sur la machine..."
+              rows="3"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-primary resize-none"
+            />
+          </div>
+
+          {/* Votre email */}
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Votre email (optionnel)</label>
             <input
               type="email"
               value={reportForm.email}
               onChange={(e) => setReportForm({...reportForm, email: e.target.value})}
               placeholder="Pour être notifié de la validation"
-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-primary"
             />
           </div>
 
@@ -400,29 +413,29 @@ export default function AddDistributor() {
               <div className="flex items-start gap-3">
                 <span className="text-2xl">⚠️</span>
                 <div>
-                  <p className="font-bold text-orange-800 mb-1">Distributeur déjà {doublonDetecte.label} !</p>
+                  <p className="font-bold text-orange-800 mb-1">Machine déjà {doublonDetecte.label} !</p>
                   <p className="text-sm text-orange-700">
                     {doublonDetecte.name && <span className="font-medium">« {doublonDetecte.name} »</span>}
                     {doublonDetecte.address && <span> — {doublonDetecte.address}</span>}
                   </p>
-                  <p className="text-xs text-orange-600 mt-2">Un distributeur existe déjà à moins de 50m. Voulez-vous quand même l'enregistrer ?</p>
+                  <p className="text-xs text-orange-600 mt-2">Une machine existe déjà à moins de 50m. Voulez-vous quand même signaler ?</p>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pb-6">
             <button
               type="button"
               onClick={() => setMode(null)}
-              className="flex-1 bg-gray-200 text-gray-700 rounded-lg py-3 font-bold"
+              className="flex-1 bg-gray-200 text-gray-700 rounded-lg py-3 font-bold text-sm"
             >
               Retour
             </button>
             <Button type="submit" disabled={loading} className="flex-1">
               {doublonDetecte
                 ? (loading ? 'Envoi...' : 'Confirmer quand même')
-                : (loading ? 'Envoi...' : 'Signaler')}
+                : (loading ? 'Envoi...' : '📍 Signaler cette machine')}
             </Button>
           </div>
         </form>

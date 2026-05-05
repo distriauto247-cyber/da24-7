@@ -30,6 +30,8 @@ import InstallerProfile from './pages/InstallerProfile'
 import AdminInstallers from './pages/AdminInstallers'
 import OwnerDashboard from './pages/OwnerDashboard'
 import OwnerGateway from './pages/OwnerGateway'
+import SignalConfirmation from './pages/SignalConfirmation'
+import OwnerLanding from './pages/OwnerLanding'
 import OwnerClaim from './pages/OwnerClaim'
 import ReportIssue from './pages/ReportIssue'
 import OwnerSubscription from './pages/OwnerSubscription'
@@ -130,6 +132,8 @@ function App() {
           <Route path="/admin/installers" element={<AdminInstallers />} />
           <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           <Route path="/owner/gateway" element={<OwnerGateway />} />
+          <Route path="/signal-confirmation" element={<SignalConfirmation />} />
+          <Route path="/owner-landing" element={<OwnerLanding />} />
           <Route path="/owner/claim" element={<OwnerClaim />} />
           <Route path="/report-issue" element={<ReportIssue />} />
           <Route path="/owner/subscription" element={<OwnerSubscription />} />
