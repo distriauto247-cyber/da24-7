@@ -1,0 +1,128 @@
+[1mdiff --git a/src/pages/MapView.jsx b/src/pages/MapView.jsx[m
+[1mindex a9af738..de50163 100644[m
+[1m--- a/src/pages/MapView.jsx[m
+[1m+++ b/src/pages/MapView.jsx[m
+[36m@@ -67,14 +67,13 @@[m [mconst categoryPublicIcons = {[m
+   autres: '/icons/autres.png',[m
+ }[m
+ [m
+[31m-// Icône PRO — losange rouge avec icône produit, plus grand que le gris[m
+[32m+[m[32m// Icône PRO — fond rouge, liseré blanc, icône couleur d'origine[m
+ const createProIcon = (category) => {[m
+   const config = categoryIcons[category] || categoryIcons.default[m
+[31m-  const iconUrl = categoryPublicIcons[category] || categoryPublicIcons.autres[m
+   return L.divIcon({[m
+     html: `[m
+       <div style="[m
+[31m-        background-color: ${config.color};[m
+[32m+[m[32m        background-color: #E53935;[m
+         width: 44px;[m
+         height: 44px;[m
+         border-radius: 50% 50% 50% 0;[m
+[36m@@ -85,10 +84,10 @@[m [mconst createProIcon = (category) => {[m
+         border: 3px solid white;[m
+         box-shadow: 0 2px 8px rgba(0,0,0,0.3);[m
+       ">[m
+[31m-        <img src="${iconUrl}" style="[m
+[32m+[m[32m        <img src="${config.icon}" style="[m
+           transform: rotate(45deg);[m
+[31m-          width: 24px;[m
+[31m-          height: 24px;[m
+[32m+[m[32m          width: 30px;[m
+[32m+[m[32m          height: 30px;[m
+           object-fit: contain;[m
+         " />[m
+       </div>[m
+[36m@@ -211,6 +210,9 @@[m [mexport default function MapView() {[m
+   const [bottomSheetExpanded, setBottomSheetExpanded] = useState(false)[m
+   const [isFavorite, setIsFavorite] = useState(false)[m
+   const [displayDistance, setDisplayDistance] = useState(null)[m
+[32m+[m[32m  // Notation[m
+[32m+[m[32m  const [ratingData, setRatingData] = useState({ average: 0, count: 0, userRating: 0 })[m
+[32m+[m[32m  const [ratingLoading, setRatingLoading] = useState(false)[m
+ [m
+   // Catégories disponibles[m
+   const categories = [[m
+[36m@@ -697,6 +699,7 @@[m [mexport default function MapView() {[m
+     setBottomSheetExpanded(true)[m
+     checkIfFavorite(distributor.id)[m
+     setInstallerInfo(null)[m
+[32m+[m[32m    loadRating(distributor.id)[m
+ [m
+     // Charger l'installateur si la machine en a un[m
+     if (distributor.installer_id) {[m
+[36m@@ -741,6 +744,33 @@[m [mexport default function MapView() {[m
+     }[m
+   }[m
+ [m
+[32m+[m[32m  const loadRating = async (distributorId) => {[m
+[32m+[m[32m    setRatingData({ average: 0, count: 0, userRating: 0 })[m
+[32m+[m[32m    const { data } = await supabase[m
+[32m+[m[32m      .from('distributor_ratings')[m
+[32m+[m[32m      .select('rating, user_id')[m
+[32m+[m[32m      .eq('distributor_id', String(distributorId))[m
+[32m+[m[32m    if (!data || data.length === 0) return[m
+[32m+[m[32m    const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length[m
+[32m+[m[32m    const { data: { user } } = await supabase.auth.getUser()[m
+[32m+[m[32m    const userRating = user ? (data.find(r => r.user_id === user.id)?.rating || 0) : 0[m
+[32m+[m[32m    setRatingData({ average: avg, count: data.length, userRating })[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const handleRate = async (distributorId, rating) => {[m
+[32m+[m[32m    const { data: { user } } = await supabase.auth.getUser()[m
+[32m+[m[32m    if (!user) { navigate('/login'); return }[m
+[32m+[m[32m    setRatingLoading(true)[m
+[32m+[m[32m    await supabase.from('distributor_ratings').upsert({[m
+[32m+[m[32m      distributor_id: String(distributorId),[m
+[32m+[m[32m      user_id: user.id,[m
+[32m+[m[32m      rating,[m
+[32m+[m[32m      updated_at: new Date().toISOString(),[m
+[32m+[m[32m    }, { onConflict: 'user_id,distributor_id' })[m
+[32m+[m[32m    setRatingLoading(false)[m
+[32m+[m[32m    await loadRating(distributorId)[m
+[32m+[m[32m  }[m
+[32m+[m
+   const handleCategoryChange = (category) => {[m
+     setSelectedCategory(category)[m
+     setShowFilters(false)[m
+[36m@@ -1026,6 +1056,40 @@[m [mexport default function MapView() {[m
+               </div>[m
+             )}[m
+ [m
+[32m+[m[32m            {/* Notation étoiles */}[m
+[32m+[m[32m            {proOwners.has(String(selectedDistributor.id)) ? ([m
+[32m+[m[32m              <div className="flex items-center gap-2 mb-3">[m
+[32m+[m[32m                <div className="flex gap-1">[m
+[32m+[m[32m                  {[1,2,3,4,5].map(star => ([m
+[32m+[m[32m                    <button[m
+[32m+[m[32m                      key={star}[m
+[32m+[m[32m                      onClick={() => handleRate(selectedDistributor.id, star)}[m
+[32m+[m[32m                      disabled={ratingLoading}[m
+[32m+[m[32m                      className="text-2xl leading-none transition-transform active:scale-125"[m
+[32m+[m[32m                    >[m
+[32m+[m[32m                      <span style={{ color: star <= (ratingData.userRating || ratingData.average) ? '#F59E0B' : '#D1D5DB' }}>★</span>[m
+[32m+[m[32m                    </button>[m
+[32m+[m[32m                  ))}[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m                {ratingData.count > 0 ? ([m
+[32m+[m[32m                  <span className="text-xs text-gray-500">[m
+[32m+[m[32m                    {ratingData.average.toFixed(1)} · {ratingData.count} avis[m
+[32m+[m[32m                  </span>[m
+[32m+[m[32m                ) : ([m
+[32m+[m[32m                  <span className="text-xs text-gray-400">Pas encore noté</span>[m
+[32m+[m[32m                )}[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m            ) : ([m
+[32m+[m[32m              <div className="flex items-center gap-2 mb-3">[m
+[32m+[m[32m                <div className="flex gap-1">[m
+[32m+[m[32m                  {[1,2,3,4,5].map(star => ([m
+[32m+[m[32m                    <span key={star} className="text-2xl leading-none" style={{ color: '#D1D5DB' }}>★</span>[m
+[32m+[m[32m                  ))}[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m                <span className="text-xs text-gray-400">🔒 Notation réservée aux machines référencées</span>[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m            )}[m
+[32m+[m
+             {/* Boutons d'action */}[m
+             <div className="space-y-2">[m
+               {/* Bouton ITINÉRAIRE — toujours visible */}[m

@@ -1105,20 +1105,20 @@ export default function MapView() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleAddToFavorites(selectedDistributor)}
-                    className={`flex-1 border-2 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 ${
+                    className={`flex-1 border-2 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 ${
                       isFavorite
                         ? 'bg-primary border-primary text-white'
                         : 'border-primary text-primary'
                     }`}
                   >
-                    <Heart size={18} className={isFavorite ? 'fill-white' : ''} />
+                    <Heart size={15} className={isFavorite ? 'fill-white' : ''} />
                     {isFavorite ? 'RETIRER DES FAVORIS' : 'AJOUTER EN FAVORI'}
                   </button>
                   <button
                     onClick={() => handleShare(selectedDistributor)}
-                    className="flex-1 border-2 border-primary text-primary py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+                    className="flex-1 border-2 border-primary text-primary py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5"
                   >
-                    <Share2 size={18} />
+                    <Share2 size={15} />
                     PARTAGER
                   </button>
                 </div>
