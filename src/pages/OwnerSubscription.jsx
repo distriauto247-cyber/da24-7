@@ -13,7 +13,7 @@ const PLANS = [
       { label: 'Machine visible sur la carte', included: true, note: 'Marqueur gris discret' },
       { label: 'Bouton Itinéraire', included: true },
       { label: 'Favoris & Partage utilisateurs', included: false },
-      { label: 'Marqueur coloré pulsant', included: false },
+      { label: 'Marqueur coloré et identifiable', included: false },
       { label: 'Statistiques de vues', included: false },
       { label: 'Photos, horaires, description', included: false },
       { label: 'Alertes problèmes consommateurs', included: false },
@@ -31,7 +31,7 @@ const PLANS = [
       { label: 'Machine visible sur la carte', included: true },
       { label: 'Bouton Itinéraire', included: true },
       { label: 'Favoris & Partage utilisateurs', included: true, note: 'Vos clients peuvent sauvegarder' },
-      { label: 'Marqueur coloré pulsant', included: true, note: 'Se démarque sur la carte' },
+      { label: 'Machine visible sur la carte', included: true, note: 'Icône colorée avec votre catégorie' },
       { label: 'Statistiques complètes', included: true, note: 'Vues, itinéraires, favoris, partages' },
       { label: 'Photos, horaires, description', included: true },
       { label: 'Alertes problèmes consommateurs', included: false },
@@ -49,7 +49,7 @@ const PLANS = [
       { label: 'Machine visible sur la carte', included: true },
       { label: 'Bouton Itinéraire', included: true },
       { label: 'Favoris & Partage utilisateurs', included: true },
-      { label: 'Marqueur coloré pulsant', included: true },
+      { label: 'Marqueur coloré et identifiable', included: true },
       { label: 'Statistiques complètes', included: true },
       { label: 'Photos, horaires, description', included: true },
       { label: 'Alertes problèmes consommateurs', included: true, note: 'Panne, CB, produit non reçu...' },
@@ -59,9 +59,9 @@ const PLANS = [
 ]
 
 const ARGUMENTS = [
-  { icon: '👁', title: 'Votre machine est déjà vue', desc: 'Des utilisateurs passent devant votre machine chaque jour. Sans abonnement, vous ne savez pas combien.' },
-  { icon: '🔒', title: 'Favoris et partage bloqués', desc: 'Sur les machines non abonnées, les utilisateurs ne peuvent pas ajouter en favori ni partager. Vous perdez des clients réguliers.' },
-  { icon: '📍', title: 'Marqueur gris = invisible', desc: 'Les machines abonnées pulsent en couleur sur la carte. Les vôtres sont grises. Le choix est vite fait pour l\'utilisateur.' },
+  { icon: '🗺️', title: 'Votre machine n\'existe pas sur la carte', desc: 'Sans référencement, votre machine est invisible pour les milliers d\'utilisateurs qui cherchent un distributeur près de chez eux chaque jour.' },
+  { icon: '🔒', title: 'Favoris et partage bloqués', desc: 'Seules les machines référencées peuvent être ajoutées en favori et partagées. Vos clients réguliers potentiels passent à côté.' },
+  { icon: '📊', title: 'Vous ne savez pas ce que vous perdez', desc: 'Combien d\'utilisateurs cherchent une machine comme la vôtre dans votre quartier ? Sans abonnement, vous n\'aurez jamais cette réponse.' },
   { icon: '⚠️', title: 'Problèmes non détectés', desc: 'Sans abonnement Premium, vous apprenez les pannes... quand vos clients se plaignent ailleurs.' },
 ]
 
@@ -91,9 +91,9 @@ export default function OwnerSubscription() {
 
         {/* Accroche choc */}
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
-          <p className="text-sm font-bold text-primary mb-1">Votre machine est déjà sur DA24.7</p>
+          <p className="text-sm font-bold text-primary mb-1">Vos clients vous cherchent — trouvez-les !</p>
           <p className="text-sm text-gray-600 leading-relaxed">
-            Parmi les <strong>33 000+ distributeurs</strong> référencés en France, le vôtre apparaît en gris, sans info, sans photo. Les utilisateurs le voient... mais cliquent sur une machine concurrente mieux présentée.
+            Chaque jour, des utilisateurs DA24.7 cherchent un distributeur près de chez eux. <strong>Sans référencement, votre machine n'apparaît pas.</strong> Référencez-la pour capter ce trafic qualifié.
           </p>
         </div>
 
