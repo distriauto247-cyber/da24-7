@@ -7,6 +7,45 @@ export function usePushNotifications(user) {
   const [token, setToken] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  // Obtenir le Service Worker Firebase enregistré
+  const getFirebaseSW = async () => {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      const firebaseSW = registrations.find(r => 
+        r.active?.scriptURL?.includes('firebase-messaging-sw.js')
+      )
+      if (firebaseSW) return firebaseSW
+      // Si pas encore enregistré, l'enregistrer maintenant
+      const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
+      await navigator.serviceWorker.ready
+      return reg
+    } catch (err) {
+      console.warn('Erreur SW Firebase:', err)
+      return null
+    }
+  }
+
+  // Sauvegarder le token dans Supabase
+  const saveTokenToDatabase = async (fcmToken, userId) => {
+    try {
+      const { error } = await supabase
+        .from('push_tokens')
+        .upsert({
+          user_id: userId,
+          token: fcmToken,
+          endpoint: 'fcm',
+          last_used: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,token'
+        })
+
+      if (error) throw error
+      console.log('✅ Token sauvegardé dans Supabase')
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde token:', error)
+    }
+  }
+
   // Demander la permission et enregistrer le token
   const requestPermission = async () => {
     if (!messaging) {
@@ -17,21 +56,28 @@ export function usePushNotifications(user) {
     setLoading(true)
     
     try {
-      // Demander la permission
       const perm = await Notification.requestPermission()
       setPermission(perm)
 
       if (perm === 'granted') {
-        // Obtenir le token FCM
-        const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY })
+        // Obtenir le SW Firebase
+        const swRegistration = await getFirebaseSW()
+
+        // Obtenir le token FCM en passant le SW
+        const currentToken = await getToken(messaging, { 
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: swRegistration || undefined
+        })
         
         if (currentToken) {
-          console.log('Token FCM obtenu:', currentToken)
+          console.log('✅ Token FCM obtenu:', currentToken)
           setToken(currentToken)
           
-          // Sauvegarder le token dans Supabase
           if (user) {
             await saveTokenToDatabase(currentToken, user.id)
+          } else {
+            // Stocker temporairement pour sauvegarder quand user se connecte
+            localStorage.setItem('pendingFCMToken', currentToken)
           }
           
           return true
@@ -51,39 +97,17 @@ export function usePushNotifications(user) {
     }
   }
 
-  // Sauvegarder le token dans Supabase
-  const saveTokenToDatabase = async (fcmToken, userId) => {
-    try {
-      const { error } = await supabase
-        .from('push_tokens')
-        .upsert({
-          user_id: userId,
-          token: fcmToken,
-          endpoint: 'fcm',
-          last_used: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,token'
-        })
-
-      if (error) throw error
-      console.log('Token sauvegardé dans Supabase')
-    } catch (error) {
-      console.error('Erreur sauvegarde token:', error)
-    }
-  }
-
-  // Écouter les messages en premier plan (quand l'app est ouverte)
+  // Écouter les messages en premier plan
   useEffect(() => {
     if (!messaging) return
 
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log('Message reçu en premier plan:', payload)
       
-      // Afficher une notification même si l'app est ouverte
       if (Notification.permission === 'granted') {
         new Notification(payload.notification.title, {
           body: payload.notification.body,
-          icon: '/icons/icon-192x192.png',
+          icon: '/logo-192.png',
           data: payload.data
         })
       }
@@ -92,13 +116,29 @@ export function usePushNotifications(user) {
     return () => unsubscribe()
   }, [])
 
-  // Vérifier si le token existe déjà au chargement
+  // Vérifier/enregistrer le token quand user est disponible
   useEffect(() => {
     if (!messaging || !user) return
 
     const checkExistingToken = async () => {
       try {
-        const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY })
+        // Vérifier si un token en attente existe
+        const pendingToken = localStorage.getItem('pendingFCMToken')
+        if (pendingToken) {
+          await saveTokenToDatabase(pendingToken, user.id)
+          localStorage.removeItem('pendingFCMToken')
+          setToken(pendingToken)
+          return
+        }
+
+        if (Notification.permission !== 'granted') return
+
+        const swRegistration = await getFirebaseSW()
+        const currentToken = await getToken(messaging, { 
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: swRegistration || undefined
+        })
+        
         if (currentToken) {
           setToken(currentToken)
           await saveTokenToDatabase(currentToken, user.id)
@@ -108,9 +148,7 @@ export function usePushNotifications(user) {
       }
     }
 
-    if (Notification.permission === 'granted') {
-      checkExistingToken()
-    }
+    checkExistingToken()
   }, [user])
 
   return {
