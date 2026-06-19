@@ -43,10 +43,10 @@ function App() {
 
   useEffect(() => {
     // Vérifier la session utilisateur au démarrage
-    // Délai minimum court (400ms) uniquement pour éviter un flash si la session
-    // répond trop vite ; le vrai splash visible est celui en HTML (index.html),
+    // Délai volontaire de 1500ms : c'est l'intro (logo + titre), assumée comme telle,
+    // pas une sécurité technique. Le splash visible est celui en HTML (index.html),
     // pas de second écran React dupliqué ici.
-    const minDelay = new Promise(resolve => setTimeout(resolve, 400))
+    const minDelay = new Promise(resolve => setTimeout(resolve, 1500))
     const sessionCheck = supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
     })
