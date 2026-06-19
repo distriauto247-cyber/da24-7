@@ -265,7 +265,7 @@ export default function OwnerSubscription() {
           <h3 className="font-bold text-sm">Questions fréquentes</h3>
           {[
             { q: 'Comment fonctionne l\'abonnement ?', r: 'Mensuel sans engagement, résiliable à tout moment par email.' },
-            { q: 'Puis-je avoir plusieurs machines ?', r: 'Oui, l\'abonnement s\'applique par machine. Tarifs dégressifs pour les parcs importants, contactez-nous.' },
+            { q: 'Puis-je avoir plusieurs machines ?', r: 'Oui, l\'abonnement s\'applique par machine. Pour 2 à 3 machines, l\'offre Premium + est à 29€/mois, puis +6€/mois par machine supplémentaire au-delà de 3.' },
             { q: 'Que se passe-t-il si j\'arrête ?', r: 'Votre machine reste listée gratuitement en marqueur gris. Vous perdez la visibilité, les stats et les alertes.' },
             { q: 'Ma machine est-elle déjà référencée ?', r: 'Très probablement oui — nous avons 33 000+ machines. Cherchez-la sur la carte DA24.7.' },
           ].map((item, i) => (
