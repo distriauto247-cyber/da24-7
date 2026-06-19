@@ -14,6 +14,8 @@ export default function OwnerClaim() {
   const [justification, setJustification] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -57,6 +59,94 @@ export default function OwnerClaim() {
     } catch (err) {
       console.error('Erreur recherche:', err)
     }
+  }
+
+  // Distance haversine en mètres entre deux points
+  const distanceMetres = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000
+    const toRad = deg => (deg * Math.PI) / 180
+    const dLat = toRad(lat2 - lat1)
+    const dLon = toRad(lon2 - lon1)
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+    return 2 * R * Math.asin(Math.sqrt(a))
+  }
+
+  const RADIUS_M = 50
+
+  const searchNearby = () => {
+    if (!navigator.geolocation) {
+      setGeoError("La géolocalisation n'est pas disponible sur cet appareil.")
+      return
+    }
+
+    setGeoError(null)
+    setGeoLoading(true)
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords
+
+        // Boîte englobante large pour limiter la requête, le tri précis se fait ensuite en JS
+        const latDelta = RADIUS_M / 111320
+        const lonDelta = RADIUS_M / (111320 * Math.cos((latitude * Math.PI) / 180))
+
+        try {
+          const [resManuel, resOSM] = await Promise.all([
+            supabase.from('distributors').select('id, name, address, category, latitude, longitude')
+              .gte('latitude', latitude - latDelta).lte('latitude', latitude + latDelta)
+              .gte('longitude', longitude - lonDelta).lte('longitude', longitude + lonDelta),
+            supabase.from('distributeurs').select('osm_id, nom, adresse, ville, latitude, longitude')
+              .gte('latitude', latitude - latDelta).lte('latitude', latitude + latDelta)
+              .gte('longitude', longitude - lonDelta).lte('longitude', longitude + lonDelta),
+          ])
+
+          const manual = (resManuel.data || []).map(d => ({
+            id: d.id,
+            name: d.name || 'Distributeur automatique',
+            address: d.address,
+            latitude: d.latitude,
+            longitude: d.longitude,
+            source: 'manual',
+          }))
+
+          const osm = (resOSM.data || []).map(d => ({
+            id: `osm-${d.osm_id}`,
+            name: d.nom || 'Distributeur automatique',
+            address: [d.adresse, d.ville].filter(Boolean).join(', ') || 'Adresse inconnue',
+            latitude: d.latitude,
+            longitude: d.longitude,
+            source: 'osm',
+          }))
+
+          // Filtre précis au rayon réel (la boîte englobante est plus large qu'un cercle) et tri par distance
+          const proches = [...manual, ...osm]
+            .map(m => ({ ...m, distance: distanceMetres(latitude, longitude, m.latitude, m.longitude) }))
+            .filter(m => m.distance <= RADIUS_M)
+            .sort((a, b) => a.distance - b.distance)
+
+          setSuggestions(proches)
+          if (proches.length === 0) {
+            setGeoError(`Aucune machine trouvée dans un rayon de ${RADIUS_M} m.`)
+          }
+        } catch (err) {
+          console.error('Erreur recherche proximité:', err)
+          setGeoError('Erreur lors de la recherche autour de vous.')
+        } finally {
+          setGeoLoading(false)
+        }
+      },
+      (err) => {
+        setGeoLoading(false)
+        setGeoError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Géolocalisation refusée. Autorisez-la dans les réglages pour utiliser cette recherche.'
+            : 'Impossible de récupérer votre position.'
+        )
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
   }
 
   const handleSelectMachine = (machine) => {
@@ -145,13 +235,30 @@ export default function OwnerClaim() {
                     <p className="font-medium text-sm">{machine.name}</p>
                     <div className="flex items-center gap-1 mt-0.5">
                       <MapPin size={11} className="text-gray-400" />
-                      <p className="text-xs text-gray-500">{machine.address}</p>
+                      <p className="text-xs text-gray-500">
+                        {machine.address}
+                        {machine.distance != null && ` · ${Math.round(machine.distance)} m`}
+                      </p>
                     </div>
                   </button>
                 ))}
               </div>
             )}
           </div>
+
+          {/* Recherche autour de moi */}
+          <button
+            onClick={searchNearby}
+            disabled={geoLoading}
+            className="mt-3 w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 disabled:opacity-60"
+          >
+            <MapPin size={16} className={geoLoading ? 'animate-pulse' : ''} />
+            {geoLoading ? 'Recherche en cours...' : `Rechercher autour de moi (${RADIUS_M} m)`}
+          </button>
+
+          {geoError && (
+            <p className="text-xs text-orange-600 mt-2">{geoError}</p>
+          )}
 
           {selectedMachine && (
             <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
