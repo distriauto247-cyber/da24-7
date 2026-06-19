@@ -55,6 +55,27 @@ const PLANS = [
       { label: 'Alertes problèmes consommateurs', included: true, note: 'Panne, CB, produit non reçu...' },
       { label: 'Priorité d\'affichage', included: true, note: 'Apparaît avant les non-abonnés' },
     ]
+  },
+  {
+    id: 'premium_plus',
+    name: 'Premium +',
+    price: 29,
+    priceNote: 'pour 2 à 3 machines',
+    extraPerMachine: 6,
+    threshold: 3,
+    color: 'purple',
+    description: 'Pour les propriétaires de plusieurs machines',
+    badge: 'Multi-machines',
+    features: [
+      { label: 'Machine visible sur la carte', included: true },
+      { label: 'Bouton Itinéraire', included: true },
+      { label: 'Favoris & Partage utilisateurs', included: true, note: 'Vos clients peuvent sauvegarder' },
+      { label: 'Marqueur coloré et identifiable', included: true },
+      { label: 'Statistiques complètes', included: true, note: 'Vues, itinéraires, favoris, partages' },
+      { label: 'Photos, horaires, description', included: true },
+      { label: 'Alertes problèmes consommateurs', included: true, note: 'Panne, CB, produit non reçu...' },
+      { label: 'Priorité d\'affichage', included: true, note: 'Apparaît avant les non-abonnés' },
+    ]
   }
 ]
 
@@ -69,12 +90,21 @@ export default function OwnerSubscription() {
   const navigate = useNavigate()
   const [selected, setSelected] = useState('essentiel')
   const [showContact, setShowContact] = useState(false)
+  const [machineCount, setMachineCount] = useState(2)
 
   const planColors = {
     gray: { bg: 'bg-gray-50', border: 'border-gray-300', badge: 'bg-gray-100 text-gray-600', check: 'text-gray-400' },
     blue: { bg: 'bg-blue-50', border: 'border-blue-400', badge: 'bg-blue-100 text-blue-700', check: 'text-blue-500' },
     red: { bg: 'bg-red-50', border: 'border-primary', badge: 'bg-primary text-white', check: 'text-primary' },
+    purple: { bg: 'bg-purple-50', border: 'border-purple-400', badge: 'bg-purple-100 text-purple-700', check: 'text-purple-500' },
   }
+
+  const selectedPlan = PLANS.find(p => p.id === selected)
+  const computedPrice = selectedPlan
+    ? (selectedPlan.id === 'premium_plus' && machineCount > selectedPlan.threshold
+        ? selectedPlan.price + selectedPlan.extraPerMachine * (machineCount - selectedPlan.threshold)
+        : selectedPlan.price)
+    : 0
 
   return (
     <div className="min-h-screen bg-secondary pb-24">
@@ -139,6 +169,11 @@ export default function OwnerSubscription() {
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 italic">{plan.description}</p>
+                {plan.priceNote && (
+                  <p className="text-xs text-purple-600 font-medium mt-1">
+                    {plan.price} € {plan.priceNote} · +{plan.extraPerMachine} €/machine au-delà de {plan.threshold}
+                  </p>
+                )}
               </div>
 
               <div className="px-4 pb-4 space-y-2">
@@ -168,8 +203,35 @@ export default function OwnerSubscription() {
           <div className="bg-white rounded-xl p-4 shadow-sm">
             {!showContact ? (
               <>
+                {selected === 'premium_plus' && (
+                  <div className="mb-4">
+                    <label className="text-xs font-semibold text-gray-600 block mb-2 text-center">Nombre de machines</label>
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setMachineCount(m => Math.max(2, m - 1))}
+                        className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-bold"
+                      >
+                        −
+                      </button>
+                      <span className="text-lg font-bold w-6 text-center">{machineCount}</span>
+                      <button
+                        type="button"
+                        onClick={() => setMachineCount(m => m + 1)}
+                        className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-bold"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600 mb-3 text-center">
-                  Offre <strong>{PLANS.find(p => p.id === selected)?.name}</strong> — <strong>{PLANS.find(p => p.id === selected)?.price} €/mois</strong> sans engagement
+                  Offre <strong>{selectedPlan?.name}</strong> — <strong>{computedPrice} €/mois</strong> sans engagement
+                  {selected === 'premium_plus' && (
+                    <span className="block text-xs text-gray-400 mt-1">
+                      pour {machineCount} machine{machineCount > 1 ? 's' : ''}
+                    </span>
+                  )}
                 </p>
                 <button
                   onClick={() => setShowContact(true)}
@@ -182,7 +244,11 @@ export default function OwnerSubscription() {
               <div className="text-center space-y-3">
                 <p className="text-sm font-bold text-gray-700">Contactez-nous pour activer votre abonnement :</p>
                 <a
-                  href={`mailto:distriauto24.7@gmail.com?subject=Abonnement DA24.7 - Offre ${PLANS.find(p => p.id === selected)?.name}&body=Bonjour, je souhaite référencer ma machine avec l'offre ${PLANS.find(p => p.id === selected)?.name} à ${PLANS.find(p => p.id === selected)?.price}€/mois.`}
+                  href={`mailto:distriauto24.7@gmail.com?subject=${encodeURIComponent(`Abonnement DA24.7 - Offre ${selectedPlan?.name}`)}&body=${encodeURIComponent(
+                    selected === 'premium_plus'
+                      ? `Bonjour, je souhaite référencer ${machineCount} machines avec l'offre ${selectedPlan?.name} (${computedPrice}€/mois pour ${machineCount} machines).`
+                      : `Bonjour, je souhaite référencer ma machine avec l'offre ${selectedPlan?.name} à ${selectedPlan?.price}€/mois.`
+                  )}`}
                   className="block w-full bg-primary text-white py-3 rounded-lg font-bold text-sm"
                 >
                   ✉️ distriauto24.7@gmail.com
