@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import InstallPrompt from './components/InstallPrompt'
 
 // Layouts
 import MainLayout from './layouts/MainLayout'
@@ -42,12 +43,18 @@ function App() {
 
   useEffect(() => {
     // Vérifier la session utilisateur au démarrage
-    // Délai minimum de 1.5s pour le splash screen
-    const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
+    // Délai minimum court (400ms) uniquement pour éviter un flash si la session
+    // répond trop vite ; le vrai splash visible est celui en HTML (index.html),
+    // pas de second écran React dupliqué ici.
+    const minDelay = new Promise(resolve => setTimeout(resolve, 400))
     const sessionCheck = supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
     })
-    Promise.all([minDelay, sessionCheck]).then(() => setLoading(false))
+    Promise.all([minDelay, sessionCheck]).then(() => {
+      setLoading(false)
+      const splash = document.getElementById('splash')
+      if (splash) splash.style.display = 'none'
+    })
 
     // Écouter les changements d'authentification
     const {
@@ -60,48 +67,14 @@ function App() {
   }, [])
 
   if (loading) {
-    return (
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: '#F5F0EB',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-      }}>
-        <img
-          src="/logo-transparent.png"
-          alt="DA24/7"
-          style={{ width: '72vw', maxWidth: '320px', height: 'auto', marginBottom: '24px' }}
-        />
-        <p style={{
-          fontSize: '18px',
-          fontWeight: '600',
-          color: '#E53935',
-          textAlign: 'center',
-          letterSpacing: '0.5px',
-          margin: 0,
-        }}>
-          Distributeurs automatiques
-        </p>
-        <p style={{
-          fontSize: '18px',
-          fontWeight: '600',
-          color: '#E53935',
-          textAlign: 'center',
-          letterSpacing: '0.5px',
-          margin: '4px 0 0 0',
-        }}>
-          24/24 &nbsp;7/7
-        </p>
-      </div>
-    )
+    // Rien à afficher ici : le splash HTML (#splash, dans index.html) est encore
+    // visible à l'écran (z-index 99999) tant que loading est true.
+    return null
   }
 
   return (
     <Router>
+      <InstallPrompt />
       <Routes>
         {/* Routes publiques (sans layout) */}
         <Route path="/login" element={<Login />} />

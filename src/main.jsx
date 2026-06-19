@@ -3,9 +3,8 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 
-// Cacher le splash HTML natif dès que React prend le relais
-const splash = document.getElementById('splash')
-if (splash) splash.style.display = 'none'
+// Le splash HTML (#splash dans index.html) reste affiché.
+// C'est App.jsx qui le masque une fois la session vérifiée (voir useEffect).
 
 // Enregistrer le Service Worker Firebase pour les notifications push
 if ('serviceWorker' in navigator) {
