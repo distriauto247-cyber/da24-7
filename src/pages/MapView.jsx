@@ -35,7 +35,7 @@ const createCategoryIcon = (category) => {
   return L.divIcon({
     html: `
       <div style="
-        background-color: #cccccc;
+        background-color: #999999;
         width: 28px;
         height: 28px;
         border-radius: 50% 50% 50% 0;
@@ -43,7 +43,7 @@ const createCategoryIcon = (category) => {
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid #aaaaaa;
+        border: 2px solid #777777;
         box-shadow: 0 1px 4px rgba(0,0,0,0.15);
         opacity: 0.55;
       ">
