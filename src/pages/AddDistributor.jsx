@@ -160,6 +160,32 @@ export default function AddDistributor() {
       return { source: 'machine', label, address: d.address, name: d.name, category: d.category }
     }
 
+    // Chercher dans distributeurs (import OSM, marqueurs gris) — même catégorie + même zone
+    // Note : la colonne "categorie" de cette table utilise des libellés capitalisés (ex: "Pain"),
+    // contrairement à "category" ici qui est en minuscules (ex: "pain"). Comparaison insensible à la casse.
+    const { data: osm } = await supabase
+      .from('distributeurs')
+      .select('osm_id, nom, adresse, ville, categorie, latitude, longitude')
+      .gte('latitude', lat - delta)
+      .lte('latitude', lat + delta)
+      .gte('longitude', lng - delta)
+      .lte('longitude', lng + delta)
+
+    const osmMatch = (osm || []).find(
+      d => d.categorie && d.categorie.toLowerCase() === category.toLowerCase()
+    )
+
+    if (osmMatch) {
+      return {
+        source: 'osm',
+        label: 'présent sur la carte (non référencé)',
+        address: [osmMatch.adresse, osmMatch.ville].filter(Boolean).join(', ') || null,
+        name: osmMatch.nom,
+        category: osmMatch.categorie,
+        osm_id: osmMatch.osm_id,
+      }
+    }
+
     return null
   }
 
@@ -169,10 +195,18 @@ export default function AddDistributor() {
     try {
       // Vérifier doublon avant insertion
       const doublon = await verifierDoublon(reportForm.latitude, reportForm.longitude, reportForm.category)
-      if (doublon && !doublonDetecte) {
-        setDoublonDetecte(doublon)
-        setLoading(false)
-        return
+      if (doublon) {
+        if (doublon.source === 'osm') {
+          // Marqueur gris existant : on bloque toujours, pas de bypass possible
+          setDoublonDetecte(doublon)
+          setLoading(false)
+          return
+        }
+        if (!doublonDetecte) {
+          setDoublonDetecte(doublon)
+          setLoading(false)
+          return
+        }
       }
       setDoublonDetecte(null)
 
@@ -206,10 +240,18 @@ export default function AddDistributor() {
     try {
       // Vérifier doublon avant insertion
       const doublon = await verifierDoublon(ownerForm.latitude, ownerForm.longitude, ownerForm.category)
-      if (doublon && !doublonDetecte) {
-        setDoublonDetecte(doublon)
-        setLoading(false)
-        return
+      if (doublon) {
+        if (doublon.source === 'osm') {
+          // Marqueur gris existant : on bloque toujours, pas de bypass possible
+          setDoublonDetecte(doublon)
+          setLoading(false)
+          return
+        }
+        if (!doublonDetecte) {
+          setDoublonDetecte(doublon)
+          setLoading(false)
+          return
+        }
       }
       setDoublonDetecte(null)
 
@@ -415,7 +457,26 @@ export default function AddDistributor() {
           </div>
 
           {/* Avertissement doublon */}
-          {doublonDetecte && (
+          {doublonDetecte && doublonDetecte.source === 'osm' && (
+            <div className="bg-orange-50 border-2 border-orange-400 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-bold text-orange-800 mb-1">Cette machine existe déjà sur la carte</p>
+                  <p className="text-sm text-orange-700">
+                    {doublonDetecte.name && <span className="font-medium">« {doublonDetecte.name} »</span>}
+                    {doublonDetecte.address && <span> — {doublonDetecte.address}</span>}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-2">
+                    Un marqueur gris (non référencé) existe déjà à moins de 50m dans cette catégorie.
+                    Pas besoin de la signaler, elle est déjà sur la carte.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {doublonDetecte && doublonDetecte.source !== 'osm' && (
             <div className="bg-orange-50 border-2 border-orange-400 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">⚠️</span>
@@ -439,11 +500,13 @@ export default function AddDistributor() {
             >
               Retour
             </button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {doublonDetecte
-                ? (loading ? 'Envoi...' : 'Confirmer quand même')
-                : (loading ? 'Envoi...' : '📍 Signaler cette machine')}
-            </Button>
+            {!(doublonDetecte && doublonDetecte.source === 'osm') && (
+              <Button type="submit" disabled={loading} className="flex-1">
+                {doublonDetecte
+                  ? (loading ? 'Envoi...' : 'Confirmer quand même')
+                  : (loading ? 'Envoi...' : '📍 Signaler cette machine')}
+              </Button>
+            )}
           </div>
         </form>
       </div>
@@ -659,7 +722,33 @@ export default function AddDistributor() {
           </div>
 
           {/* Avertissement doublon */}
-          {doublonDetecte && (
+          {doublonDetecte && doublonDetecte.source === 'osm' && (
+            <div className="bg-orange-50 border-2 border-orange-400 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-bold text-orange-800 mb-1">Cette machine existe déjà sur la carte</p>
+                  <p className="text-sm text-orange-700">
+                    {doublonDetecte.name && <span className="font-medium">« {doublonDetecte.name} »</span>}
+                    {doublonDetecte.address && <span> — {doublonDetecte.address}</span>}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-2">
+                    Un marqueur gris (non référencé) existe déjà à moins de 50m dans la catégorie {doublonDetecte.category}.
+                    Pour éviter les doublons, revendiquez ce marqueur existant plutôt que d'en créer un nouveau.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/owner/claim')}
+                    className="mt-3 w-full bg-orange-500 text-white rounded-lg py-2.5 text-sm font-bold"
+                  >
+                    Revendiquer ce marqueur existant
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {doublonDetecte && doublonDetecte.source !== 'osm' && (
             <div className="bg-orange-50 border-2 border-orange-400 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">⚠️</span>
@@ -683,11 +772,13 @@ export default function AddDistributor() {
             >
               Retour
             </button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {doublonDetecte
-                ? (loading ? 'Ajout...' : 'Confirmer quand même')
-                : (loading ? 'Ajout...' : 'Ajouter ma machine')}
-            </Button>
+            {!(doublonDetecte && doublonDetecte.source === 'osm') && (
+              <Button type="submit" disabled={loading} className="flex-1">
+                {doublonDetecte
+                  ? (loading ? 'Ajout...' : 'Confirmer quand même')
+                  : (loading ? 'Ajout...' : 'Ajouter ma machine')}
+              </Button>
+            )}
           </div>
         </form>
       </div>
